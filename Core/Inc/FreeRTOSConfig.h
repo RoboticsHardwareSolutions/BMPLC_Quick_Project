@@ -140,6 +140,7 @@ standard names. */
 #define xPortPendSVHandler PendSV_Handler
 
 #define USE_CUSTOM_SYSTICK_HANDLER_IMPLEMENTATION 1
+#define configRECORD_STACK_HIGH_ADDRESS 1
 
 /* IMPORTANT: This define is commented when used with STM32Cube firmware, when the timebase source is SysTick,
               to prevent overwriting SysTick_Handler defined within STM32Cube HAL */
