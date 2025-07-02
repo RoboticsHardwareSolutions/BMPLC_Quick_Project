@@ -71,5 +71,13 @@ if(RPLC_XL)
         target_link_libraries(lwip PUBLIC freertos_kernel lwip_service)
 endif()
 
+####################### mlib ############################
+add_library(mlib INTERFACE)
+
+target_include_directories(mlib
+        INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/mlib
+)
+
 ####################### RHS core lib ############################
 add_subdirectory(rhs)

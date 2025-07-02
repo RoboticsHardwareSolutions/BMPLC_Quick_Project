@@ -40,3 +40,6 @@
 [submodule "rlibs/co_stack"]
 	path = rlibs/co_stack
 	url = https://github.com/RoboticsHardwareSolutions/co_stack.git
+[submodule "thirdparty/mlib"]
+	path = thirdparty/mlib
+	url = https://github.com/P-p-H-d/mlib.git
