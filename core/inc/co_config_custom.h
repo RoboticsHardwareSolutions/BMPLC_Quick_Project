@@ -1,0 +1,5 @@
+#pragma once
+
+#define SDO_TIMEOUT_MS 100
+#define NO_SDO_DYNAMIC_BUFFER_ALLOCATION
+
