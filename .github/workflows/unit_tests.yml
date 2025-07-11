@@ -27,7 +27,6 @@ jobs:
       - name: Flash firmware
         run: |
           python3 .github/scripts/flashing.py
-          pip install pylink-square
           
       - name: Upload flashing artefacts
         uses: actions/upload-artifact@v4
