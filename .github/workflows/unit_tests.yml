@@ -26,6 +26,7 @@ jobs:
 
       - name: Flash firmware
         run: |
+            mkdir artefacts
             python3 .github/scripts/flashing.py build/rplc.bin
           
       - name: Upload flashing artefacts

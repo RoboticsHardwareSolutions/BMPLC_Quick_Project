@@ -53,25 +53,26 @@ def read_rtt_to_file(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
                     print(f"len={len(data)}")
                     f.write(text)
                     f.flush()
-
     except Exception as e:
         print(f"Error RTT: {e}")
     finally:
         jlink.rtt_stop()
 
-def flash_device_by_usb(jlink: JLink, fw_file: str) -> None:
-    if not jlink.opened():
-        print("JLink not open")
-        return
+def flash_device_by_usb(jlink_serial: int, fw_file: str) -> None:
 
-    try:
+
+    jlink = pylink.JLink()
+    jlink.open(serial_no=jlink_serial)
+
+    if jlink.opened():
         jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-        jlink.connect("STM32F103RE")
-        result = jlink.flash_file(fw_file, 0x08000000)
-        print(f"Flash result: {result}")
+        jlink.connect('STM32F103RE')
+        print(jlink.flash_file(fw_file, 0x08000000))
         jlink.reset(halt=False)
-    except Exception as e:
-        print(f"Error flashing device: {e}")
+
+        read_rtt_to_file(jlink, command_map, 10.0)
+
+    jlink.close()
 
 def get_arg() -> str:
     if len(sys.argv) < 2 or not sys.argv[1].strip():
@@ -82,11 +83,8 @@ def get_arg() -> str:
 def main():
     fw_file = get_arg()
 
-    with pylink.JLink() as jlink:
-        jlink.open(serial_no=771850347)
-        flash_device_by_usb(jlink, fw_file)
-        read_rtt_to_file(jlink, command_map, 10.0)
-        jlink.close()
+    flash_device_by_usb(771850347, fw_file)
+    time.sleep(10)
 
 if __name__ == "__main__":
     main()
