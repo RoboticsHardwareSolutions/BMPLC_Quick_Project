@@ -26,4 +26,11 @@ jobs:
 
       - name: Flash firmware
         run: |
-          JLinkExe -CommandFile flash/RPLC_M.jlink
+          python3 flash/flashing.py
+          
+      - name: Upload flashing artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flashing-artefacts
+          path: flash/artefacts/*
+
