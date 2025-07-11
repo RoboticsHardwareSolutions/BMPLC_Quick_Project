@@ -84,7 +84,6 @@ def main():
     fw_file = get_arg()
 
     flash_device_by_usb(771850347, fw_file)
-    time.sleep(10)
 
 if __name__ == "__main__":
     main()
