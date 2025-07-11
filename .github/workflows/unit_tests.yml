@@ -26,7 +26,7 @@ jobs:
 
       - name: Flash firmware
         run: |
-          python3 flash/flashing.py
+          python3 .github/scripts/flashing.py
           
       - name: Upload flashing artefacts
         uses: actions/upload-artifact@v4
