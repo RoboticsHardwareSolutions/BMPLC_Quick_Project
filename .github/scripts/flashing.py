@@ -72,7 +72,7 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
                                 failed = match.group(4)
                                 print(f"Test result for {test_cmd}: {passed} passed, {failed} failed (File: {file_path}, Test case: {test_case})")
                             else:
-                                print(f"::warning::No test report found for {test_cmd}. Output:\n{resp_text}")
+                                print(f"::error::No test report found for {test_cmd}. Output:\n{resp_text}")
                     except Exception as e:
                         print(f"Error sending test command {test_cmd}: {e}")
     except Exception as e:
