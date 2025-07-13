@@ -61,10 +61,16 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
                         if response:
                             resp_text = remove_ansi_colors(bytes(response).decode("utf-8", errors="ignore"))
                             # Extract report info
-                            match = re.search(r'report.*?(\d+)\s*passed.*?(\d+)\s*failed', resp_text, re.IGNORECASE)
+                            match = re.search(
+                                r'REPORT\s*\|\s*File:\s*(.*?)\s*\|\s*Test case:\s*(.*?)\s*\|\s*Passes:\s*(\d+)\s*\|\s*Failures:\s*(\d+)',
+                                resp_text
+                            )
                             if match:
-                                passed, failed = match.group(1), match.group(2)
-                                print(f"Test result for {test_cmd}: {passed} passed, {failed} failed")
+                                file_path = match.group(1)
+                                test_case = match.group(2)
+                                passed = match.group(3)
+                                failed = match.group(4)
+                                print(f"Test result for {test_cmd}: {passed} passed, {failed} failed (File: {file_path}, Test case: {test_case})")
                             else:
                                 print(f"No report found for {test_cmd}. Output:\n{resp_text}")
                     except Exception as e:
