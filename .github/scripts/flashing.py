@@ -72,7 +72,7 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
                                 failed = match.group(4)
                                 print(f"Test result for {test_cmd}: {passed} passed, {failed} failed (File: {file_path}, Test case: {test_case})")
                             else:
-                                print(f"No report found for {test_cmd}. Output:\n{resp_text}")
+                                print(f"::warning::No test report found for {test_cmd}. Output:\n{resp_text}")
                     except Exception as e:
                         print(f"Error sending test command {test_cmd}: {e}")
     except Exception as e:
@@ -101,9 +101,12 @@ def get_arg() -> str:
     return os.path.abspath(sys.argv[1].strip())
 
 def main():
-    fw_file = get_arg()
-
-    flash_device_by_usb(771850347, fw_file)
+    try:
+        fw_file = get_arg()
+        flash_device_by_usb(771850347, fw_file)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
