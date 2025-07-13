@@ -1,8 +1,0 @@
-device STM32F103RE
-speed 4000
-USB 771850347
-if swd
-loadbin rplc.bin 0x08000000
-r
-g
-qc

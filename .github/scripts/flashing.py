@@ -32,25 +32,24 @@ def read_rtt_to_file(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
 
         with open(filename, "w") as f:
             start_time = time.time()
-            while time.time() - start_time < duration or duration == 0.0:
+            while True:
+                elapsed = time.time() - start_time
+                if duration > 0.0 and elapsed >= duration:
+                    break
 
-                current_time = time.time() - start_time
                 for cmd_time, cmd_data in command_map.items():
-                    if not cmd_data.executed and current_time >= cmd_time:
+                    if not cmd_data.executed and elapsed >= cmd_time:
                         try:
                             jlink.rtt_write(0, cmd_data.command.encode("utf-8"))
-                            print(f"Sent at {current_time:.2f}s: {cmd_data.command}")
-                            cmd_data.executed = True
+                            print(f"Sent at {elapsed:.2f}s: {cmd_data.command}")
                         except Exception as e:
-                            print(f"Failed to send command: {cmd_data.command}")
+                            print(f"Failed to send command: {cmd_data.command} ({e})")
+                        finally:
                             cmd_data.executed = True
 
                 data = jlink.rtt_read(0, 1024)
                 if data:
-                    text = remove_ansi_colors(
-                        bytes(data).decode("utf-8", errors="ignore")
-                    )
-                    print(f"len={len(data)}")
+                    text = remove_ansi_colors(data.decode("utf-8", errors="ignore"))
                     f.write(text)
                     f.flush()
     except Exception as e:
@@ -59,8 +58,6 @@ def read_rtt_to_file(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
         jlink.rtt_stop()
 
 def flash_device_by_usb(jlink_serial: int, fw_file: str) -> None:
-
-
     jlink = pylink.JLink()
     jlink.open(serial_no=jlink_serial)
 
