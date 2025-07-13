@@ -23,35 +23,52 @@ def remove_ansi_colors(text: str) -> str:
     return re.sub(r"\x1b\[[0-9;]*m", "", text)
 
 
-def read_rtt_to_file(jlink: JLink, command_map: dict, duration: float = 0.0) -> None:
-    filename = f"artefacts/rtt_log_{time.strftime('%Y%m%d_%H%M%S')}.txt"
+def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> None:
 
     try:
         jlink.rtt_start()
         time.sleep(0.1)
 
-        with open(filename, "w") as f:
-            start_time = time.time()
-            while True:
-                elapsed = time.time() - start_time
-                if duration > 0.0 and elapsed >= duration:
-                    break
+        start_time = time.time()
+        while True:
+            elapsed = time.time() - start_time
+            if duration > 0.0 and elapsed >= duration:
+                break
 
-                for cmd_time, cmd_data in command_map.items():
-                    if not cmd_data.executed and elapsed >= cmd_time:
-                        try:
-                            jlink.rtt_write(0, cmd_data.command.encode("utf-8"))
-                            print(f"Sent at {elapsed:.2f}s: {cmd_data.command}")
-                        except Exception as e:
-                            print(f"Failed to send command: {cmd_data.command} ({e})")
-                        finally:
-                            cmd_data.executed = True
+            for cmd_time, cmd_data in command_map.items():
+                if not cmd_data.executed and elapsed >= cmd_time:
+                    try:
+                        jlink.rtt_write(0, cmd_data.command.encode("utf-8"))
+                        print(f"Sent at {elapsed:.2f}s: {cmd_data.command}")
+                    except Exception as e:
+                        print(f"Failed to send command: {cmd_data.command} ({e})")
+                    finally:
+                        cmd_data.executed = True
 
-                data = jlink.rtt_read(0, 1024)
-                if data:
-                    text = remove_ansi_colors(bytes(data).decode("utf-8", errors="ignore"))
-                    f.write(text)
-                    f.flush()
+            data = jlink.rtt_read(0, 1024)
+            if data:
+                text = remove_ansi_colors(bytes(data).decode("utf-8", errors="ignore"))
+                # Find commands ending with '_test'
+                test_commands = [line.strip() for line in text.splitlines() if line.strip().endswith('_test')]
+
+                for test_cmd in test_commands:
+                    # Send test command
+                    try:
+                        jlink.rtt_write(0, test_cmd.encode("utf-8"))
+                        print(f"Sent test command: {test_cmd}")
+                        time.sleep(0.2)  # Wait for response
+                        response = jlink.rtt_read(0, 1024)
+                        if response:
+                            resp_text = remove_ansi_colors(bytes(response).decode("utf-8", errors="ignore"))
+                            # Extract report info
+                            match = re.search(r'report.*?(\d+)\s*passed.*?(\d+)\s*failed', resp_text, re.IGNORECASE)
+                            if match:
+                                passed, failed = match.group(1), match.group(2)
+                                print(f"Test result for {test_cmd}: {passed} passed, {failed} failed")
+                            else:
+                                print(f"No report found for {test_cmd}. Output:\n{resp_text}")
+                    except Exception as e:
+                        print(f"Error sending test command {test_cmd}: {e}")
     except Exception as e:
         print(f"Error RTT: {e}")
     finally:
@@ -67,7 +84,7 @@ def flash_device_by_usb(jlink_serial: int, fw_file: str) -> None:
         print(jlink.flash_file(fw_file, 0x08000000))
         jlink.reset(halt=False)
 
-        read_rtt_to_file(jlink, command_map, 10.0)
+        run_tests_by_rtt(jlink, command_map, 10.0)
 
     jlink.close()
 
