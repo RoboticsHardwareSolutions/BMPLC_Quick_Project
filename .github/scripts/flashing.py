@@ -49,7 +49,7 @@ def read_rtt_to_file(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
 
                 data = jlink.rtt_read(0, 1024)
                 if data:
-                    text = remove_ansi_colors(data.decode("utf-8", errors="ignore"))
+                    text = remove_ansi_colors(bytes(data).decode("utf-8", errors="ignore"))
                     f.write(text)
                     f.flush()
     except Exception as e:
