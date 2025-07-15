@@ -26,12 +26,8 @@ jobs:
 
       - name: Flash firmware
         run: |
-            mkdir artefacts
-            python3 .github/scripts/flashing.py build/rplc.bin
-          
-      - name: Upload flashing artefacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: flashing-artefacts
-          path: artefacts/*
+            python3 .github/scripts/flashing.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_M }} STM32F103RE build/rplc.bin 
 
+      - name: Unit tests
+        run: |
+            python3 .github/scripts/units.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_M }} STM32F103RE
