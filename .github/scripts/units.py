@@ -97,22 +97,30 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
         jlink.rtt_stop()
     return has_error
 
-def rtt_device_by_usb(jlink_serial: int) -> None:
+def rtt_device_by_usb(jlink_serial: int, mcu: str) -> None:
     jlink = pylink.JLink()
     jlink.open(serial_no=jlink_serial)
 
     if jlink.opened():
         jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
-        jlink.connect("STM32F103RE")
+        jlink.connect(mcu)
         has_error = run_tests_by_rtt(jlink, command_map, 10.0)
 
     jlink.close()
 
     return has_error
 
+def get_args():
+    if len(sys.argv) < 3 or not sys.argv[1].strip() or not sys.argv[2].strip():
+        raise ValueError("Usage: python units.py <jlink_serial> <mcu>")
+    jlink_serial = int(sys.argv[1].strip())
+    mcu = sys.argv[2].strip()
+    return jlink_serial, mcu
+
 def main():
     try:
-        if rtt_device_by_usb(771850347):
+        jlink_serial, mcu = get_args()
+        if rtt_device_by_usb(jlink_serial, mcu):
             sys.exit(1)
     except Exception as e:
         print(f"Error: {e}")
