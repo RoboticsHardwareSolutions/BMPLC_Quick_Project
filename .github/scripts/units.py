@@ -27,7 +27,7 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
     has_error = False
     try:
         jlink.rtt_start()
-        time.sleep(0.1)
+        time.sleep(1.0)
 
         start_time = time.time()
         while True:
@@ -50,7 +50,10 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
                 text = remove_ansi_colors(bytes(data).decode("utf-8", errors="ignore"))
                 # Find commands ending with '_test'
                 test_commands = [line.strip() for line in text.splitlines() if line.strip().endswith('_test')]
-
+                if not test_commands:
+                    print("::warning::No tests found in RTT output.")
+                    has_error = True
+                    continue
                 for test_cmd in test_commands:
                     # Send test command
                     try:
