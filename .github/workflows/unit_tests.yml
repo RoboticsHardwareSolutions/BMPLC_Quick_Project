@@ -1,11 +1,27 @@
 name: BareMetal_PLCs CI
 
-on: [pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build_rplc_m:
+  build_rplc:
     runs-on: [self-hosted]
-    name: Build RPLC_M
+    strategy:
+      matrix:
+        plc_type: ["RPLC_M", "RPLC_XL"]
+        include:
+          - plc_type: "RPLC_M"
+            jlink_serial: 'JLINK_SERIAL_CI_BMPLC_M'
+            mcu: "STM32F103RE"
+            build_dir: "build_m"
+          - plc_type: "RPLC_XL"
+            jlink_serial: 'JLINK_SERIAL_CI_BMPLC_XL'
+            mcu: "STM32F765ZG"
+            build_dir: "build_xl"
+    name: Build ${{ matrix.plc_type }}
 
     steps:
       - name: Checkout code
@@ -16,49 +32,19 @@ jobs:
 
       - name: Configure project
         run: |
-          mkdir build
-          cd build
-          cmake -DPLC_TYPE="RPLC_M" ..
+          mkdir ${{ matrix.build_dir }}
+          cd ${{ matrix.build_dir }}
+          cmake -DPLC_TYPE="${{ matrix.plc_type }}" ..
 
       - name: Build project
         run: |
-          cd build
+          cd ${{ matrix.build_dir }}
           cmake --build .
 
       - name: Flash firmware
         run: |
-            python3 .github/scripts/flashing.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_M }} STM32F103RE build/rplc.bin 
+          python3 .github/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/rplc.bin
 
       - name: Unit tests
         run: |
-            python3 .github/scripts/units.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_M }} STM32F103RE
-
-  build_rplc_xl:
-    runs-on: [self-hosted]
-    name: Build RPLC_XL
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
-          fetch-depth: 1
-
-      - name: Configure project
-        run: |
-          mkdir build
-          cd build
-          cmake -DPLC_TYPE="RPLC_XL" ..
-
-      - name: Build project
-        run: |
-          cd build
-          cmake --build .
-
-      - name: Flash firmware
-        run: |
-            python3 .github/scripts/flashing.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_XL }} STM32F765ZG build/rplc.bin 
-
-      - name: Unit tests
-        run: |
-            python3 .github/scripts/units.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_XL }} STM32F765ZG
+          python3 .github/scripts/units.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }}
