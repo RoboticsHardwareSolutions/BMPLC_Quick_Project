@@ -17,7 +17,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake -DPLC_TYPE="RPLC_M" ..
 
       - name: Build project
         run: |

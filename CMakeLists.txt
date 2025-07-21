@@ -36,7 +36,8 @@ endif()
 
 include_directories(core/inc)
 
-set(RPLC_M ON)
+set(PLC_TYPE "RPLC_M" CACHE STRING "Choose RPLC_TYPE (RPLC_M or RPLC_L or RPLC_XL)")
+
 include(thirdparty/rhs/rhs.cmake)
 
 add_executable(${PROJECT_NAME}.elf
