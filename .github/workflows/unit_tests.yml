@@ -3,8 +3,9 @@ name: BareMetal_PLCs CI
 on: [pull_request]
 
 jobs:
-  build:
+  build_rplc_m:
     runs-on: [self-hosted]
+    name: Build RPLC_M
 
     steps:
       - name: Checkout code
@@ -31,3 +32,33 @@ jobs:
       - name: Unit tests
         run: |
             python3 .github/scripts/units.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_M }} STM32F103RE
+
+  build_rplc_xl:
+    runs-on: [self-hosted]
+    name: Build RPLC_XL
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Configure project
+        run: |
+          mkdir build
+          cd build
+          cmake -DPLC_TYPE="RPLC_XL" ..
+
+      - name: Build project
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Flash firmware
+        run: |
+            python3 .github/scripts/flashing.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_XL }} STM32F765ZG build/rplc.bin 
+
+      - name: Unit tests
+        run: |
+            python3 .github/scripts/units.py ${{ secrets.JLINK_SERIAL_CI_BMPLC_XL }} STM32F765ZG
