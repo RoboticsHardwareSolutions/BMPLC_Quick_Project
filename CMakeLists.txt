@@ -25,18 +25,21 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
     message(STATUS "Maximum optimization for speed, debug info included")
     add_compile_options(-Ofast -g)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
+    add_compile_options(-g)
     message(STATUS "Maximum optimization for size")
     add_compile_options(-Os)
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinOptDebInfo")
     message(STATUS "Maximum optimization for size")
     add_compile_options(-Og -g)
 else()
+    add_compile_options(-g)
     message(STATUS "No optimization")
 endif()
 
 include_directories(core/inc)
 
-set(RPLC_M ON)
+set(PLC_TYPE "RPLC_M" CACHE STRING "Choose RPLC_TYPE (RPLC_M or RPLC_L or RPLC_XL)")
+
 include(thirdparty/rhs/rhs.cmake)
 
 add_executable(${PROJECT_NAME}.elf
