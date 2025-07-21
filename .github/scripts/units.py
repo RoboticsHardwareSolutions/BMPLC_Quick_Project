@@ -26,7 +26,7 @@ def test_runner(jlink: JLink, response) -> None:
         try:
             jlink.rtt_write(0, test_cmd.encode("utf-8"))
             print(f"Sent test command: {test_cmd}")
-            time.sleep(0.2)  # Wait for response
+            time.sleep(5.0)  # Wait for response
             response = jlink.rtt_read(0, 1024)
             if response:
                 resp_text = remove_ansi_colors(bytes(response).decode("utf-8", errors="ignore"))
@@ -53,7 +53,7 @@ def test_runner(jlink: JLink, response) -> None:
 
 
 command_map = {
-    7.0: Command("?", callback=test_runner),
+    0.0: Command("?", callback=test_runner),
 }
 
 
@@ -66,6 +66,7 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
     has_error = False
     try:
         jlink.rtt_start()
+        time.sleep(11.0) # I don't know why, but it's necessary for rtt to start in RPLC_XL.
 
         start_time = time.time()
         while True:
@@ -76,8 +77,8 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
             for cmd_time, cmd_data in command_map.items():
                 if not cmd_data.executed and elapsed >= cmd_time:
                     try:
-                        jlink.rtt_write(0, cmd_data.command.encode("utf-8"))
-                        print(f"Sent at {elapsed:.2f}s: {cmd_data.command}")
+                        w_b = jlink.rtt_write(0, cmd_data.command.encode("utf-8"))
+                        print(f"Sent at {elapsed:.2f}s: {cmd_data.command} wrote {w_b} bytes")
                         time.sleep(0.2)  # Wait for response
                         data = jlink.rtt_read(0, 1024)
                         if not data:
@@ -102,8 +103,13 @@ def rtt_device_by_usb(jlink_serial: int, mcu: str) -> None:
     jlink.open(serial_no=jlink_serial)
 
     if jlink.opened():
-        jlink.set_tif(pylink.enums.JLinkInterfaces.SWD)
+        if not jlink.set_tif(pylink.enums.JLinkInterfaces.SWD):
+            print("Not updated")
         jlink.connect(mcu)
+        if not jlink.connected():
+            print("Not connected")
+
+        # jlink.reset(halt=False)
         has_error = run_tests_by_rtt(jlink, command_map, 10.0)
 
     jlink.close()
