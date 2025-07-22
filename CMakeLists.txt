@@ -36,16 +36,27 @@ else()
     message(STATUS "No optimization")
 endif()
 
-include_directories(core/inc)
 
+# RHS Core settings
 set(PLC_TYPE "RPLC_M" CACHE STRING "Choose RPLC_TYPE (RPLC_M or RPLC_L or RPLC_XL)")
 
 include(thirdparty/rhs/rhs.cmake)
+if(PLC_TYPE MATCHES "RPLC_XL")
+    include(thirdparty/rhs/device_templates/plc_xl.cmake)
+elseif(PLC_TYPE MATCHES "RPLC_L")
+    include(thirdparty/rhs/device_templates/plc_l.cmake)
+elseif(PLC_TYPE MATCHES "RPLC_M")
+    include(thirdparty/rhs/device_templates/plc_m.cmake)
+else()
+    message("You use custom BareMetal configuration. Good luck!")
+endif()
 
+
+# Create target
 add_executable(${PROJECT_NAME}.elf
-        main.c
-        ${SOURCES}
-        ${LINKER_SCRIPT}
+    main.c
+    ${SOURCES}
+    ${LINKER_SCRIPT}
 )
 
 set_target_properties(${PROJECT_NAME}.elf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
@@ -58,11 +69,10 @@ set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)
 
 add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${HEX_FILE}
-        COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
-        COMMENT "Building ${HEX_FILE}
+    COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${PROJECT_NAME}.elf> ${HEX_FILE}
+    COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${PROJECT_NAME}.elf> ${BIN_FILE}
+    COMMENT "Building ${HEX_FILE}
 Building ${BIN_FILE}")
-
 
 add_subdirectory(thirdparty)
 add_subdirectory(rlibs)
