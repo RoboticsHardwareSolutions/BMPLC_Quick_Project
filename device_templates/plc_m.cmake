@@ -1,4 +1,4 @@
-set(RPLC_M ON)
+set(BMPLC_M ON)
 
 ## set HAL
 set(RHS_HAL_SERIAL ON)
@@ -63,7 +63,7 @@ include_directories(
     thirdparty/cmsis/CMSIS/Core/Include
 )
 
-add_definitions(-DUSE_HAL_DRIVER -DSTM32F103xE -DRPLC_M)
+add_definitions(-DUSE_HAL_DRIVER -DSTM32F103xE -DBMPLC_M)
 
 file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f1/*.*" "thirdparty/stm32f1_hal/*.*" "thirdparty/stm32f1_cmsis/Source/Templates/gcc/startup_stm32f103xe.s")
 list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")

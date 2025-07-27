@@ -6,7 +6,7 @@
 extern uint32_t SystemCoreClock;
 #endif
 
-#if defined(RPLC_XL) || defined(RPLC_L)
+#if defined(BMPLC_XL) || defined(BMPLC_L)
 #    include "stm32f7xx_hal.h"
 #    ifndef CMSIS_device_header
 #        define CMSIS_device_header "stm32f7xx.h"
@@ -14,7 +14,7 @@ extern uint32_t SystemCoreClock;
 #    ifndef configTOTAL_HEAP_SIZE
 #        define configTOTAL_HEAP_SIZE ((size_t) 64 * 1024)
 #    endif
-#elif defined(RPLC_M)
+#elif defined(BMPLC_M)
 #    include "stm32f1xx_hal.h"
 #    ifndef configTOTAL_HEAP_SIZE
 #        define configTOTAL_HEAP_SIZE ((size_t) 48 * 1024)

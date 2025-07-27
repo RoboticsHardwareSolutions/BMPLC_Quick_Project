@@ -13,7 +13,7 @@ set(SIZE arm-none-eabi-size)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 # project settings
-project(rplc C CXX ASM)
+project(bmplc C CXX ASM)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 
@@ -38,14 +38,14 @@ endif()
 
 
 # RHS Core settings
-set(PLC_TYPE "RPLC_M" CACHE STRING "Choose RPLC_TYPE (RPLC_M or RPLC_L or RPLC_XL)")
+set(PLC_TYPE "BMPLC_M" CACHE STRING "Choose BMPLC_TYPE (BMPLC_M or BMPLC_L or BMPLC_XL)")
 
 include(thirdparty/rhs/rhs.cmake)
-if(PLC_TYPE MATCHES "RPLC_XL")
+if(PLC_TYPE MATCHES "BMPLC_XL")
     include(device_templates/plc_xl.cmake)
-elseif(PLC_TYPE MATCHES "RPLC_L")
+elseif(PLC_TYPE MATCHES "BMPLC_L")
     include(device_templates/plc_l.cmake)
-elseif(PLC_TYPE MATCHES "RPLC_M")
+elseif(PLC_TYPE MATCHES "BMPLC_M")
     include(device_templates/plc_m.cmake)
 else()
     message("You use custom BareMetal configuration. Good luck!")

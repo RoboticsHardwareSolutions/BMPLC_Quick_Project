@@ -7,17 +7,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_rplc:
+  build_bmplc:
     runs-on: [self-hosted]
     strategy:
       matrix:
-        plc_type: ["RPLC_M", "RPLC_XL"]
+        plc_type: ["BMPLC_M", "BMPLC_XL"]
         include:
-          - plc_type: "RPLC_M"
+          - plc_type: "BMPLC_M"
             jlink_serial: 'JLINK_SERIAL_CI_BMPLC_M'
             mcu: "STM32F103RE"
             build_dir: "build_m"
-          - plc_type: "RPLC_XL"
+          - plc_type: "BMPLC_XL"
             jlink_serial: 'JLINK_SERIAL_CI_BMPLC_XL'
             mcu: "STM32F765ZG"
             build_dir: "build_xl"
@@ -43,7 +43,7 @@ jobs:
 
       - name: Flash firmware
         run: |
-          python3 .github/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/rplc.bin
+          python3 .github/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/bmplc.bin
 
       - name: Unit tests
         run: |

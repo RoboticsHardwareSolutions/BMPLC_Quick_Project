@@ -1,4 +1,4 @@
-set(RPLC_L ON)
+set(BMPLC_L ON)
 
 ## set HAL
 set(RHS_HAL_FLASH_EX ON)
@@ -66,7 +66,7 @@ include_directories(
     thirdparty/cmsis/CMSIS/Core/Include
 )
 
-add_definitions(-DUSE_HAL_DRIVER -DSTM32F765xx -DRPLC_L)
+add_definitions(-DUSE_HAL_DRIVER -DSTM32F765xx -DBMPLC_L)
 
 file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f7/*.*" "thirdparty/stm32f7_hal/*.*" "thirdparty/stm32f7_cmsis/Source/Templates/gcc/startup_stm32f765xx.s")
 list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")

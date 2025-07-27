@@ -1,16 +1,16 @@
-# RPLC Quick Project
+# BMPLC Quick Project
 
 ## Hardware
-- [RPLC_M](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-M)
-- [RPLC_L](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-L)
-- [RPLC_XL](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-XL)
+- [BMPLC_M](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-M)
+- [BMPLC_L](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-L)
+- [BMPLC_XL](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-XL)
 - [User Documentation](https://roboticshardwaresolutions.github.io/BareMetal-PLCs-Vault/)
 
 ## Firmaware
 ### Cloning source code
 
 ```sh
-git clone --recursive https://github.com/RoboticsHardwareSolutions/RPLC_Quick_Project.git
+git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_Project.git
 ```
 
 ### Building firmware
@@ -23,9 +23,9 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/RPLC_Quick_Pr
 **Steps:**
 - Open project in VSCode
 - Install all recommended extensions
-- In root cmake file, set the `RPLC_M` (by default), `RPLC_L`, or `RPLC_XL` variable to the desired hardware
+- In root cmake file, set the `BMPLC_M` (by default), `BMPLC_L`, or `BMPLC_XL` variable to the desired hardware
 - Build cmake project
-- Plug in the RPLC to your computer by USB
+- Plug in the BMPLC to your computer by USB
 - Start debugging ![alt text](/documentation/images/debug_vscode.png)
     - *Launch jlink* - Use this option to start a debugging session with J-Link when the target device is connected directly to your computer.
     - *Attach jlink* - Use this option to attach the debugger to an already running target device using J-Link. 
@@ -38,7 +38,7 @@ On remote system, run the J-Link GDB Server with the appropriate parameters to a
 ```sh
 ./JLinkRemoteServer -nogui -select usb=772440171 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
 ```
-Use the `-device STM32F103RE` for RPLC_M or `-device STM32F767ZG` for RPLC_L and RPLC_XL.
+Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_L and BMPLC_XL.
 
 Then, in VSCode, select the "Launch Remote jlink" or "Attach Remote jlink" option and provide the necessary connection details (IP address and port number) to connect to the remote J-Link GDB Server.
 
@@ -143,7 +143,7 @@ int32_t new_app(void* context)
    - `RHS_LOG_I(TAG, "message")` - Logs an informational message.
    - `rhs_delay(ms)` - Delays the execution for a specified number of milliseconds.
    - `rhs_mutex`, `rhs_semaphore`, `rhs_queue` etc. - Use these for synchronization and communication between tasks. See the [RHS core documentation](/thirdparty/rhs/README.md) for more details on these tools.
-5. Now you can build the project, run your new application on the RPLC hardware and see it in action by using in RTT `top` command.
+5. Now you can build the project, run your new application on the BMPLC hardware and see it in action by using in RTT `top` command.
 
 ### Creating tests
 To create tests for your application, you can follow these steps:
