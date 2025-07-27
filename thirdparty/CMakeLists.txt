@@ -52,7 +52,7 @@ target_include_directories(RTT
 )
 
 ####################### USB lib ############################
-if(RPLC_M)
+if(BMPLC_M)
         add_library(usb_core STATIC libusb_stm32/src/usbd_core.c libusb_stm32/src/usbd_stm32f103_devfs.c)
         target_compile_definitions(usb_core PUBLIC -DUSB_PMASIZE=512)
         target_include_directories(usb_core
@@ -62,7 +62,7 @@ if(RPLC_M)
 endif()
 
 ####################### LWIP lib ############################
-if(RPLC_XL)
+if(BMPLC_XL)
         set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lwip)
         include(${LWIP_DIR}/src/Filelists.cmake)
 

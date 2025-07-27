@@ -66,7 +66,7 @@ def run_tests_by_rtt(jlink: JLink, command_map: dict, duration: float = 0.0) -> 
     has_error = False
     try:
         jlink.rtt_start()
-        time.sleep(11.0) # I don't know why, but it's necessary for rtt to start in RPLC_XL.
+        time.sleep(11.0) # I don't know why, but it's necessary for rtt to start in BMPLC_XL.
 
         start_time = time.time()
         while True:

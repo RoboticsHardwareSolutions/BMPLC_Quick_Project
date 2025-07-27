@@ -1,9 +1,9 @@
 #include "rhs.h"
 #include "rhs_hal.h"
 
-#if defined(RPLC_XL) || defined(RPLC_L)
+#if defined(BMPLC_XL) || defined(BMPLC_L)
 #    include "stm32f7xx_hal.h"
-#elif defined(RPLC_M)
+#elif defined(BMPLC_M)
 #    include "stm32f1xx_hal.h"
 #endif
 
@@ -80,7 +80,7 @@ int main(void)
     }
 }
 
-#if defined(RPLC_XL) || defined(RPLC_L)
+#if defined(BMPLC_XL) || defined(BMPLC_L)
 
 void SystemClock_Config(void)
 {
@@ -133,7 +133,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
     }
 }
 
-#elif defined(RPLC_M)
+#elif defined(BMPLC_M)
 
 void SystemClock_Config(void)
 {
