@@ -44,6 +44,7 @@ add_library(RTT STATIC
 )
 
 target_compile_definitions(RTT PUBLIC -DBUFFER_SIZE_DOWN=64)
+target_compile_definitions(RTT PUBLIC -DBUFFER_SIZE_UP=4096)
 
 target_include_directories(RTT
         PUBLIC
@@ -53,12 +54,38 @@ target_include_directories(RTT
 
 ####################### USB lib ############################
 if(BMPLC_M)
-        add_library(usb_core STATIC libusb_stm32/src/usbd_core.c libusb_stm32/src/usbd_stm32f103_devfs.c)
-        target_compile_definitions(usb_core PUBLIC -DUSB_PMASIZE=512)
-        target_include_directories(usb_core
-                PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libusb_stm32/inc>
+
+        #################### libusb_stm32 #########################
+
+        # add_library(usb_core STATIC libusb_stm32/src/usbd_core.c libusb_stm32/src/usbd_stm32f103_devfs.c)
+        # target_compile_definitions(usb_core PUBLIC -DUSB_PMASIZE=512)
+        # target_include_directories(usb_core
+        #         PUBLIC
+        #         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libusb_stm32/inc>
+        # )
+
+        #################### tinyUSB #########################
+
+        add_library(tinyusb STATIC
+                tinyusb/src/tusb.c
+                tinyusb/src/common/tusb_fifo.c
+                tinyusb/src/device/usbd.c
+                tinyusb/src/device/usbd_control.c
+                tinyusb/src/class/net/ecm_rndis_device.c
+                tinyusb/src/class/net/ncm_device.c
+                tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+                tinyusb/lib/networking/rndis_reports.c
+                ${CMAKE_SOURCE_DIR}/core/src/usb_descriptors.c
         )
+
+        target_include_directories(tinyusb
+                PUBLIC
+                ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/src
+                ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/lib/networking
+        )
+
+        target_compile_options(tinyusb PRIVATE -Wno-conversion -Wno-sign-conversion)
+        target_link_libraries(tinyusb PRIVATE freertos_kernel)
 endif()
 
 ####################### LWIP lib ############################
@@ -77,6 +104,21 @@ add_library(mlib INTERFACE)
 target_include_directories(mlib
         INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/mlib
+)
+
+####################### MOGOOSE lib ############################
+add_library(mongoose mongoose/mongoose.c)
+set_target_properties(mongoose
+        PROPERTIES
+        MONGOOSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mongoose"
+)
+target_include_directories(mongoose
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mongoose>
+        $<INSTALL_INTERFACE:mongoose>)
+target_link_libraries(mongoose
+        PUBLIC
+        freertos_kernel
 )
 
 ####################### RHS core lib ############################

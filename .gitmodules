@@ -46,3 +46,9 @@
 [submodule "rlibs/runit"]
 	path = rlibs/runit
 	url = git@github.com:RoboticsHardwareSolutions/runit.git
+[submodule "thirdparty/tinyusb"]
+	path = thirdparty/tinyusb
+	url = https://github.com/hathach/tinyusb.git
+[submodule "thirdparty/mongoose"]
+	path = thirdparty/mongoose
+	url = https://github.com/cesanta/mongoose.git
