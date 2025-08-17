@@ -75,6 +75,8 @@ if(BMPLC_M)
                 tinyusb/src/class/net/ncm_device.c
                 tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
                 tinyusb/lib/networking/rndis_reports.c
+
+                tinyusb/src/class/cdc/cdc_device.c
                 ${CMAKE_SOURCE_DIR}/core/src/usb_descriptors.c
         )
 
