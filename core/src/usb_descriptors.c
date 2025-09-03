@@ -39,7 +39,12 @@
 // Configuration mode
 // 0 : enumerated as Network (RNDIS/ECM/NCM). Board button is not pressed when enumerating
 // 1 : enumerated as Dual CDC. Board button is pressed when enumerating
-static uint32_t mode = 1;
+static uint32_t mode = 0;
+
+void descriptor_switch_mode(uint32_t new_mode)
+{
+    mode = new_mode;
+}
 
 // String Descriptor Index
 enum
@@ -195,7 +200,7 @@ static uint8_t const ecm_configuration[] = {
 
 static uint8_t const ncm_configuration[] = {
     // Config number (index+1), interface count, string index, total length, attribute, power in mA
-    TUD_CONFIG_DESCRIPTOR(CONFIG_ID_NCM + 1, ITF_NUM_TOTAL, 0, NCM_CONFIG_TOTAL_LEN, 0, 100),
+    TUD_CONFIG_DESCRIPTOR(CONFIG_ID_NCM + 1, ITF_NUM_TOTAL_NET, 0, NCM_CONFIG_TOTAL_LEN, 0, 100),
 
     // Interface number, description string index, MAC address string index, EP notification address and size, EP data
     // address (out, in), and size, max segment size.

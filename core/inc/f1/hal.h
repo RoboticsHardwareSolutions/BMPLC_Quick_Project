@@ -2,11 +2,10 @@
 
 #include <stm32f103xe.h>
 
-
-#    include "stm32f1xx.h"
-#    include <stm32f1xx_ll_pwr.h>
-#    include <stm32f1xx_ll_rcc.h>
-#    include <stm32f1xx_hal_gpio.h>
+#include "stm32f1xx.h"
+#include <stm32f1xx_ll_pwr.h>
+#include <stm32f1xx_ll_rcc.h>
+#include <stm32f1xx_hal_gpio.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
