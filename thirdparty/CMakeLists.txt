@@ -77,7 +77,7 @@ if(BMPLC_M)
                 tinyusb/lib/networking/rndis_reports.c
 
                 tinyusb/src/class/cdc/cdc_device.c
-                ${CMAKE_SOURCE_DIR}/core/src/usb_descriptors.c
+                rhs/hal/rhs_hal_usb/usb_descriptors.c
         )
 
         target_include_directories(tinyusb
