@@ -54,9 +54,6 @@ target_include_directories(RTT
 
 ####################### USB lib ############################
 if(BMPLC_M)
-
-        #################### tinyUSB #########################
-
         add_library(tinyusb STATIC
                 tinyusb/src/tusb.c
                 tinyusb/src/common/tusb_fifo.c
