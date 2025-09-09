@@ -52,8 +52,16 @@ target_include_directories(RTT
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RTT/Config>
 )
 
-####################### USB lib ############################
+####################### mlib ############################
+add_library(mlib INTERFACE)
+
+target_include_directories(mlib
+        INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/mlib
+)
+
 if(BMPLC_M)
+        ####################### USB lib ############################
         add_library(tinyusb STATIC
                 tinyusb/src/tusb.c
                 tinyusb/src/common/tusb_fifo.c
@@ -76,6 +84,21 @@ if(BMPLC_M)
 
         target_compile_options(tinyusb PRIVATE -Wno-conversion -Wno-sign-conversion)
         target_link_libraries(tinyusb PRIVATE freertos_kernel)
+
+        ####################### MOGOOSE lib ############################
+        add_library(mongoose mongoose/mongoose.c)
+        set_target_properties(mongoose
+                PROPERTIES
+                MONGOOSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mongoose"
+        )
+        target_include_directories(mongoose
+                PUBLIC
+                $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mongoose>
+                $<INSTALL_INTERFACE:mongoose>)
+        target_link_libraries(mongoose
+                PUBLIC
+                freertos_kernel
+        )
 endif()
 
 ####################### LWIP lib ############################
@@ -87,29 +110,6 @@ if(BMPLC_XL)
         target_include_directories(lwip PUBLIC ${LWIP_DIR}/src/include)
         target_link_libraries(lwip PUBLIC freertos_kernel lwip_service)
 endif()
-
-####################### mlib ############################
-add_library(mlib INTERFACE)
-
-target_include_directories(mlib
-        INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/mlib
-)
-
-####################### MOGOOSE lib ############################
-add_library(mongoose mongoose/mongoose.c)
-set_target_properties(mongoose
-        PROPERTIES
-        MONGOOSE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mongoose"
-)
-target_include_directories(mongoose
-        PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mongoose>
-        $<INSTALL_INTERFACE:mongoose>)
-target_link_libraries(mongoose
-        PUBLIC
-        freertos_kernel
-)
 
 ####################### RHS core lib ############################
 add_subdirectory(rhs)
