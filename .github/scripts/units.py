@@ -53,7 +53,7 @@ def test_runner(jlink: JLink, response) -> None:
 
 
 command_map = {
-    3000.0: Command("?", callback=test_runner),
+    500.0: Command("?", callback=test_runner),
 }
 
 
