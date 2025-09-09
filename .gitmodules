@@ -31,9 +31,6 @@
 [submodule "thirdparty/stm32f1_hal"]
 	path = thirdparty/stm32f1_hal
 	url = https://github.com/STMicroelectronics/stm32f1xx-hal-driver.git
-[submodule "thirdparty/libusb_stm32"]
-	path = thirdparty/libusb_stm32
-	url = https://github.com/dmitrystu/libusb_stm32.git
 [submodule "thirdparty/lwip"]
 	path = thirdparty/lwip
 	url = https://github.com/lwip-tcpip/lwip.git
@@ -46,3 +43,9 @@
 [submodule "rlibs/runit"]
 	path = rlibs/runit
 	url = git@github.com:RoboticsHardwareSolutions/runit.git
+[submodule "thirdparty/tinyusb"]
+	path = thirdparty/tinyusb
+	url = https://github.com/hathach/tinyusb.git
+[submodule "thirdparty/mongoose"]
+	path = thirdparty/mongoose
+	url = https://github.com/cesanta/mongoose.git

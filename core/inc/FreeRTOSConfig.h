@@ -17,7 +17,7 @@ extern uint32_t SystemCoreClock;
 #elif defined(BMPLC_M)
 #    include "stm32f1xx_hal.h"
 #    ifndef configTOTAL_HEAP_SIZE
-#        define configTOTAL_HEAP_SIZE ((size_t) 48 * 1024)
+#        define configTOTAL_HEAP_SIZE ((size_t) 40 * 1024)
 #    endif
 #elif defined(STM32F405xx) || defined(STM32F407xx)
 #    include "stm32f4xx_hal.h"
