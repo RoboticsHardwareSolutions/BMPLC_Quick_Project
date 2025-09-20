@@ -60,7 +60,7 @@ target_include_directories(mlib
         ${CMAKE_CURRENT_SOURCE_DIR}/mlib
 )
 
-if(BMPLC_M)
+if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET)
         ####################### USB lib ############################
         add_library(tinyusb STATIC
                 tinyusb/src/tusb.c
@@ -84,8 +84,10 @@ if(BMPLC_M)
 
         target_compile_options(tinyusb PRIVATE -Wno-conversion -Wno-sign-conversion)
         target_link_libraries(tinyusb PRIVATE freertos_kernel)
+endif()
 
-        ####################### MOGOOSE lib ############################
+####################### MOGOOSE lib ############################
+if(RHS_SERVICE_ETH_NET OR RHS_APPLICATION_USB_CDC_NET)
         add_library(mongoose mongoose/mongoose.c)
         set_target_properties(mongoose
                 PROPERTIES
@@ -99,16 +101,6 @@ if(BMPLC_M)
                 PUBLIC
                 freertos_kernel
         )
-endif()
-
-####################### LWIP lib ############################
-if(BMPLC_XL)
-        set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lwip)
-        include(${LWIP_DIR}/src/Filelists.cmake)
-
-        add_library(lwip ${lwipnoapps_SRCS})
-        target_include_directories(lwip PUBLIC ${LWIP_DIR}/src/include)
-        target_link_libraries(lwip PUBLIC freertos_kernel lwip_service)
 endif()
 
 ####################### RHS core lib ############################

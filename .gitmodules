@@ -31,9 +31,6 @@
 [submodule "thirdparty/stm32f1_hal"]
 	path = thirdparty/stm32f1_hal
 	url = https://github.com/STMicroelectronics/stm32f1xx-hal-driver.git
-[submodule "thirdparty/lwip"]
-	path = thirdparty/lwip
-	url = https://github.com/lwip-tcpip/lwip.git
 [submodule "rlibs/co_stack"]
 	path = rlibs/co_stack
 	url = https://github.com/RoboticsHardwareSolutions/co_stack.git
