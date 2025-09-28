@@ -3,6 +3,9 @@ set(BMPLC_M ON)
 ## set HAL
 ### All necessary HAL libs will be included in the core by services
 
+## set DRIVERS
+set(RHS_DRIVER_EEPROM ON)
+
 ## set SERVICES
 set(RHS_SERVICE_NOTIFICATION ON)
 set(RHS_SERVICE_USB_SERIAL_BRIDGE ON)
@@ -52,7 +55,7 @@ include_directories(
     thirdparty/cmsis/CMSIS/Core/Include
 )
 
-add_definitions(-DUSE_HAL_DRIVER -DSTM32F103xE -DBMPLC_M)
+add_definitions(-DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER -DSTM32F103xE -DBMPLC_M)
 
 file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f1/*.*" "thirdparty/stm32f1_hal/*.*" "thirdparty/stm32f1_cmsis/Source/Templates/gcc/startup_stm32f103xe.s")
 list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")

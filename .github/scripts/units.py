@@ -110,7 +110,7 @@ def rtt_device_by_usb(jlink_serial: int, mcu: str) -> None:
             print("Not connected")
 
         # jlink.reset(halt=False)
-        has_error = run_tests_by_rtt(jlink, command_map, 10.0)
+        has_error = run_tests_by_rtt(jlink, command_map, 30.0)
 
     jlink.close()
 
