@@ -34,7 +34,7 @@ jobs:
         run: |
           mkdir ${{ matrix.build_dir }}
           cd ${{ matrix.build_dir }}
-          cmake -DPLC_TYPE="${{ matrix.plc_type }}" ..
+          cmake -DPLC_TYPE="${{ matrix.plc_type }}" -DCMAKE_BUILD_TYPE=Debug ..
 
       - name: Build project
         run: |

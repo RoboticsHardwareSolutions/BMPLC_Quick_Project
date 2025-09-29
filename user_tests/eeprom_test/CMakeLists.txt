@@ -18,4 +18,4 @@ target_link_libraries(${PROJECT_NAME}
         eeprom
 )
 
-start_up(rhs_eeprom_test_start_up)
+test(rhs_eeprom_test)
