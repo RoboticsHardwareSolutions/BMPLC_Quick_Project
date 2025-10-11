@@ -43,8 +43,14 @@ jobs:
 
       - name: Flash firmware
         run: |
-          python3 thirdparty/rhs/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/bmplc.bin
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -r thirdparty/rhs/scripts/requirements.txt
+          python thirdparty/rhs/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/bmplc.bin
 
       - name: Unit tests
         run: |
-          python3 thirdparty/rhs/scripts/units.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }}
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -r thirdparty/rhs/scripts/requirements.txt
+          python thirdparty/rhs/scripts/units.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }}
