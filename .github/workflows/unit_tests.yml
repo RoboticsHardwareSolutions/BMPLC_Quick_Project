@@ -46,11 +46,11 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -r thirdparty/rhs/scripts/requirements.txt
-          python thirdparty/rhs/scripts/flashing.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} ${{ matrix.build_dir }}/bmplc.bin
+          rhs-flash ${{ matrix.build_dir }}/bmplc.bin --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }}
 
       - name: Unit tests
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -r thirdparty/rhs/scripts/requirements.txt
-          python thirdparty/rhs/scripts/units.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }}
+          python thirdparty/rhs/scripts/units.py ${{ secrets[matrix.jlink_serial] }} ${{ matrix.mcu }} --verbose
