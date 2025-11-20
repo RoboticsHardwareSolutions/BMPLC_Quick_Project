@@ -56,7 +56,7 @@ jobs:
           
           if [ -z "$TEST_LIST" ]; then
             echo "No tests found"
-            exit 0
+            exit 1
           fi
           
           TEST_COUNT=0
