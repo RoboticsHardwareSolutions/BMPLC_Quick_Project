@@ -52,39 +52,37 @@ jobs:
         run: |
           source .venv/bin/activate
           
-          TEST_LIST=$(rhs-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --msg "?" --msg-timeout 10 -t 20 2>&1 | grep "_test" || true)
+          TEST_LIST=$(rhs-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --msg "?" -t 20 2>&1 | grep "_test" || true)
           
           if [ -z "$TEST_LIST" ]; then
             echo "No tests found"
             exit 1
           fi
           
-          TEST_COUNT=0
-          PASS_COUNT=0
-          FAIL_COUNT=0
+          HAS_FAILURES=0
           
           echo "$TEST_LIST" | while IFS= read -r test_name; do
             [ -z "$test_name" ] && continue
             
-            TEST_COUNT=$((TEST_COUNT + 1))
-            
-            TEST_OUTPUT=$(rhs-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --no-reset --msg "$test_name" --msg-timeout 0.5 -t 10 2>&1)
+            echo "Running test: $test_name"
+            TEST_OUTPUT=$(rhs-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --no-reset --msg "$test_name" -t 10 2>&1)
             
             echo "$TEST_OUTPUT"
             
             if echo "$TEST_OUTPUT" | grep -q "REPORT"; then
               FAILURES=$(echo "$TEST_OUTPUT" | grep "REPORT" | tail -1 | grep -oP "Failures:\s*\K\d+" || echo "0")
               
-              if [ "$FAILURES" -eq 0 ]; then
-                PASS_COUNT=$((PASS_COUNT + 1))
+              if [ "$FAILURES" -ne 0 ]; then
+                echo "❌ Test FAILED: $test_name (Failures: $FAILURES)"
+                HAS_FAILURES=1
               else
-                FAIL_COUNT=$((FAIL_COUNT + 1))
+                echo "✅ Test PASSED: $test_name"
               fi
             else
-              FAIL_COUNT=$((FAIL_COUNT + 1))
+              echo "❌ Test FAILED: $test_name (No REPORT found)"
+              HAS_FAILURES=1
             fi
+            echo "---"
           done
           
-          echo "Tests: $TEST_COUNT | Passed: $PASS_COUNT | Failed: $FAIL_COUNT"
-          
-          [ $FAIL_COUNT -gt 0 ] && exit 1 || exit 0
+          exit $HAS_FAILURES
