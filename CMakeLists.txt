@@ -40,7 +40,7 @@ endif()
 # RHS Core settings
 set(PLC_TYPE "BMPLC_M" CACHE STRING "Choose BMPLC_TYPE (BMPLC_M or BMPLC_L or BMPLC_XL)")
 
-include(thirdparty/rhs/rhs.cmake)
+include(thirdparty/rhs/cmake/rhs.cmake)
 if(PLC_TYPE MATCHES "BMPLC_XL")
     include(device_templates/plc_xl.cmake)
 elseif(PLC_TYPE MATCHES "BMPLC_L")
