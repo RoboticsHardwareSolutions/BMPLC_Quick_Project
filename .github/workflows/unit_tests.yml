@@ -29,6 +29,11 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 1
+      
+      - name: Fetch tags for version detection
+        run: |
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+          git submodule foreach --recursive 'git fetch --depth=1 origin +refs/tags/*:refs/tags/* || true'
 
       - name: Configure project
         run: |
