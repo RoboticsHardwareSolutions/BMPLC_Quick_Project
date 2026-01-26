@@ -61,11 +61,11 @@ int32_t init_task(void* context)
 int main(void)
 {
     HAL_Init();
+    SystemClock_Config();
 
     rhs_init();
     rhs_hal_init();
 
-    SystemClock_Config();
 
     RHSThread* thread = rhs_thread_alloc_service("init_task", 1024, init_task, NULL);
     rhs_thread_start(thread);
