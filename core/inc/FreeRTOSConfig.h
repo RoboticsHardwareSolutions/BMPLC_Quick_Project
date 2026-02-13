@@ -90,6 +90,9 @@ to exclude the API function. */
 #define INCLUDE_xQueueGetMutexHolder 1
 #define INCLUDE_uxTaskGetStackHighWaterMark 1
 #define INCLUDE_eTaskGetState 1
+#define INCLUDE_xTaskGetIdleTaskHandle 1
+#define INCLUDE_xTaskGetCurrentTaskHandle 1
+#define INCLUDE_pxTaskGetStackStart 1
 
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES 3
 
