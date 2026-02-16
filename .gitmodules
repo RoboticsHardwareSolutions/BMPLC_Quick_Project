@@ -1,6 +1,6 @@
 [submodule "thirdparty/cmsis"]
 	path = thirdparty/cmsis
-	url = https://github.com/ARM-software/CMSIS_5.git
+	url = https://github.com/ARM-software/CMSIS_6.git
 [submodule "thirdparty/stm32f7_cmsis"]
 	path = thirdparty/stm32f7_cmsis
 	url = https://github.com/STMicroelectronics/cmsis-device-f7.git
