@@ -46,6 +46,8 @@ add_subdirectory(user_tests)
 
 rhs_report()
 
+# Extract only the directory name from the build path
+get_filename_component(CMAKE_BINARY_DIR_NAME "${CMAKE_BINARY_DIR}" NAME)
 configure_file(
     "${CMAKE_SOURCE_DIR}/.vscode/example/settings.json.in"
     "${CMAKE_SOURCE_DIR}/.vscode/settings.json"

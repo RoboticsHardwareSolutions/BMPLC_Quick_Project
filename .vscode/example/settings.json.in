@@ -1,5 +1,5 @@
 {
-    "bm.firmwareFileName": "@CMAKE_BINARY_DIR@/@CMAKE_PROJECT_NAME@",
+    "bm.firmwareFileName": "@CMAKE_BINARY_DIR_NAME@/@CMAKE_PROJECT_NAME@.elf",
     "bm.svdFileName": "@DEVICE_SVD_FILE@",
     "bm.deviceName": "@DEVICE_TYPE@",
     "bm.remoteHostName": "host_name",
