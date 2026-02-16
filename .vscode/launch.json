@@ -1,0 +1,216 @@
+{
+    "version": "0.2.0",
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "IPAddressID",
+            "description": "IP of the J-Link GDB Server",
+            "default": "192.168.1.100"
+        },
+        {
+            "type": "promptString",
+            "id": "BLACKMAGIC",
+            "description": "GDB Target for BlackMagic Probe <ip:port> or <serial>",
+            "default": "COM1"
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Launch (Remote SEGGER JLink)",
+            "request": "launch",
+            "type": "cortex-debug",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "servertype": "jlink",
+            "ipAddress": "${input:IPAddressID}",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "gdbPath": "arm-none-eabi-gdb",
+            "runToMain": true,
+            "runToEntryPoint": "main",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            },
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "Attach (Remote SEGGER JLink)",
+            "request": "attach",
+            "type": "cortex-debug",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "servertype": "jlink",
+            "ipAddress": "${input:IPAddressID}",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "gdbPath": "arm-none-eabi-gdb",
+            "runToMain": true,
+            "runToEntryPoint": "main",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            },
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "Launch (Remote SEGGER JLink with setup on host)",
+            "request": "launch",
+            "type": "cortex-debug",
+            "preLaunchTask": "RemoteDebugSetup",
+            "postDebugTask": "RemoteDebugTeardown",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "servertype": "jlink",
+            "ipAddress": "${input:IPAddressID}",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "gdbPath": "arm-none-eabi-gdb",
+            "runToMain": true,
+            "runToEntryPoint": "main",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            },
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none",
+        },
+        {
+            "name": "Launch (SEGGER JLink)",
+            "request": "launch",
+            "type": "cortex-debug",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "servertype": "jlink",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "gdbPath": "arm-none-eabi-gdb",
+            "runToMain": true,
+            "runToEntryPoint": "main",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            },
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "Attach (SEGGER JLink)",
+            "request": "attach",
+            "type": "cortex-debug",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "servertype": "jlink",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "gdbPath": "arm-none-eabi-gdb",
+            "runToMain": true,
+            "runToEntryPoint": "main",
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "label": "",
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            },
+            "rtos": "FreeRTOS",
+            "showDevDebugOutput": "none"
+        },
+        {
+            "name": "Launch FW with RTT (BlackMagic Probe)",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "${input:BLACKMAGIC}",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "BlackMagic RTT Terminal",
+            "postDebugTask": "BlackMagic RTT Terminal Teardown",
+            "preLaunchCommands": [
+                "monitor rtt enable",
+                "python import gdb; addr = int(gdb.parse_and_eval('&_SEGGER_RTT')); gdb.execute(f'monitor rtt ram {addr:#x} {addr+0x1000:#x}')",
+            ],
+        },
+        {
+            "name": "Attach FW with RTT (BlackMagic Probe)",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/${config:bm.firmwareFileName}",
+            "request": "attach",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "${input:BLACKMAGIC}",
+            "interface": "swd",
+            "device": "${config:bm.deviceName}",
+            "svdFile": "${workspaceFolder}/${config:bm.svdFileName}",
+            "preLaunchTask": "BlackMagic RTT Terminal",
+            "postDebugTask": "BlackMagic RTT Terminal Teardown",
+            "preAttachCommands": [
+                "monitor rtt enable",
+                "python import gdb; addr = int(gdb.parse_and_eval('&_SEGGER_RTT')); gdb.execute(f'monitor rtt ram {addr:#x} {addr+0x1000:#x}')",
+            ],
+        }
+    ]
+}

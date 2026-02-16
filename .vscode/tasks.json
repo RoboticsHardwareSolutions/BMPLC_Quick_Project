@@ -1,16 +1,89 @@
 {
-    "tasks": [
-        {
-            "type": "cmake",
-            "label": "CMake: build",
-            "command": "build",
-            "targets": [
-                "all"
-            ],
-            "group": "build",
-            "problemMatcher": [],
-            "detail": "CMake template build task"
-        }
-    ],
-    "version": "2.0.0"
+	"tasks": [
+		{
+			"label": "RemoteDebugSetup",
+			"type": "shell",
+			"command": "remote_debug_host_name=${config:bm.remoteHostName} remote_debug_host=${input:IPAddressID} remote_debug_password=${input:RemoteDebugPassword} bash .vscode/remote_debug_start.sh",
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": [
+					{
+						"regexp": ".",
+						"file": 1,
+						"location": 2,
+						"message": 3
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "Starting remote debug",
+					"endsPattern": "Waiting for client connections..."
+				}
+			},
+			"group": "build",
+			"options": {
+				"env": {
+					"bm_deviceName": "${config:bm.deviceName}",
+					"bm_jlinkSerial": "${config:bm.jlinkSerial}"
+				}
+			}
+		},
+		{
+			"label": "BlackMagic RTT Terminal Teardown",
+			"type": "shell",
+			"command": "killall nc screen 2>/dev/null || true"
+		},
+		{
+			"label": "BlackMagic RTT Terminal",
+			"type": "shell",
+			"command": "echo 'Starting RTT...'; TARGET='${input:BlackMagicRTT}'; if [[ $TARGET == *:* ]]; then nc ${TARGET%%:*} ${TARGET##*:}; else screen $TARGET 115200; fi; echo 'RTT Terminated'",
+			"isBackground": true,
+			"problemMatcher": [
+				{
+					"owner": "blackmagic-rtt",
+					"pattern": [
+						{
+							"regexp": ".",
+							"file": 1,
+							"location": 2,
+							"message": 3
+						}
+					],
+					"background": {
+						"activeOnStart": true,
+						"beginsPattern": ".",
+						"endsPattern": "Starting RTT..."
+					}
+				}
+			],
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated",
+				"showReuseMessage": false
+			}
+		},
+	],
+	"inputs": [
+		{
+			"type": "promptString",
+			"id": "IPAddressID",
+			"description": "IP of the J-Link GDB Server",
+			"default": "192.168.1.100",
+		},
+		{
+			"type": "promptString",
+			"password": true,
+			"id": "RemoteDebugPassword",
+			"description": "Password for remote debug user"
+		},
+		{
+			"type": "promptString",
+			"id": "BlackMagicRTT",
+			"description": "BlackMagic RTT: tty device or ip:port",
+			"default": "192.168.1.100:2332"
+		}
+	],
+	"version": "2.0.0"
 }

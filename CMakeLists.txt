@@ -45,3 +45,9 @@ add_subdirectory(rlibs)
 add_subdirectory(user_tests)
 
 rhs_report()
+
+configure_file(
+    "${CMAKE_SOURCE_DIR}/.vscode/example/settings.json.in"
+    "${CMAKE_SOURCE_DIR}/.vscode/settings.json"
+    @ONLY
+)

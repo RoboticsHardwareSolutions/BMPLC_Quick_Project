@@ -52,7 +52,7 @@ include_directories(
     thirdparty/cmsis/CMSIS/Core/Include
 )
 
-add_definitions(-DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER -DSTM32F103xE -DBMPLC_M)
+add_definitions(-DUSE_HAL_DRIVER -DUSE_FULL_LL_DRIVER -DSTM32F103xE)
 
 file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f1/*.*" "thirdparty/stm32f1_hal/*.*" "thirdparty/stm32f1_cmsis/Source/Templates/gcc/startup_stm32f103xe.s")
 list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")
@@ -64,7 +64,7 @@ add_link_options(-T ${LINKER_SCRIPT})
 
 ################################################## RHS configuration ##################################################
 
-set(BMPLC_M ON)
+add_definitions(-DBMPLC_M)
 
 ## set HAL
 ### All necessary HAL libs will be included in the core by services
@@ -84,7 +84,6 @@ set(RHS_TEST_LOG_SAVE ON)
 set(RHS_TEST_RECORDS ON)
 
 ## set LAUNCHER
-set(RHS_LAUNCH_GENERATOR_ENABLE ON)
 set(DEVICE_TYPE "STM32F103RE")
 set(DEVICE_SVD_FILE "STM32F103.svd")
 

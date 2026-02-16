@@ -1,0 +1,9 @@
+{
+    "bm.firmwareFileName": "@CMAKE_BINARY_DIR@/@CMAKE_PROJECT_NAME@",
+    "bm.svdFileName": "@DEVICE_SVD_FILE@",
+    "bm.deviceName": "@DEVICE_TYPE@",
+    "bm.remoteHostName": "host_name",
+    "bm.jlinkSerial": "772440171",
+    
+    "debug.onTaskErrors": "debugAnyway"
+}

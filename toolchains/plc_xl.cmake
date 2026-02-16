@@ -54,7 +54,7 @@ include_directories(
     thirdparty/cmsis/CMSIS/Core/Include
 )
 
-add_definitions(-DUSE_HAL_DRIVER -DSTM32F765xx -DBMPLC_XL)
+add_definitions(-DUSE_HAL_DRIVER -DSTM32F765xx)
 
 file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f7/*.*" "thirdparty/stm32f7_hal/*.*" "thirdparty/stm32f7_cmsis/Source/Templates/gcc/startup_stm32f765xx.s")
 list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")
@@ -66,7 +66,7 @@ add_link_options(-T ${LINKER_SCRIPT})
 
 ################################################## RHS configuration ##################################################
 
-set(BMPLC_XL ON)
+add_definitions(-DBMPLC_XL)
 
 ## set HAL
 set(RHS_HAL_FLASH_EX ON)
@@ -92,6 +92,5 @@ set(RHS_TEST_LOG_SAVE ON)
 set(RHS_TEST_RECORDS ON)
 
 ## set LAUNCHER
-# set(RHS_LAUNCH_GENERATOR_ENABLE ON)
 set(DEVICE_TYPE "STM32F765ZG")
 set(DEVICE_SVD_FILE "STM32F765.svd")
