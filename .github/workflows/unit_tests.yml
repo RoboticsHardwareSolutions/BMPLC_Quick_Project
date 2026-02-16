@@ -52,7 +52,7 @@ jobs:
         run: |
           source .venv/bin/activate
           
-          TEST_LIST=$(bmlab-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --msg "?" 2>&1 | grep "_test" || true)
+          TEST_LIST=$(bmlab-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --msg "?" 2>&1 | grep "_test" || true)
           
           if [ -z "$TEST_LIST" ]; then
             echo "No tests found"
@@ -65,7 +65,7 @@ jobs:
             [ -z "$test_name" ] && continue
             
             echo "Running test: $test_name"
-            TEST_OUTPUT=$(bmlab-jlink-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --no-reset --msg "$test_name" 2>&1)
+            TEST_OUTPUT=$(bmlab-rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --no-reset --msg "$test_name" 2>&1)
             
             echo "$TEST_OUTPUT"
             
