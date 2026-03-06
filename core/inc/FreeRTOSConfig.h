@@ -24,6 +24,11 @@ extern uint32_t SystemCoreClock;
 #    ifndef CMSIS_device_header
 #        define CMSIS_device_header "stm32f4xx.h"
 #    endif /* CMSIS_device_header */
+#elif defined(STM32G0B1xx)
+#    include "stm32g0xx_hal.h"
+#    ifndef CMSIS_device_header
+#        define CMSIS_device_header "stm32g0xx.h"
+#    endif /* CMSIS_device_header */
 #else
 #    error "Unsupported STM32 series. It is necessary to define DWT->CYCCNT"
 #endif
@@ -99,7 +104,14 @@ to exclude the API function. */
 #define USE_FreeRTOS_HEAP_4
 
 #define configGENERATE_RUN_TIME_STATS 1
-#define portGET_RUN_TIME_COUNTER_VALUE() (DWT->CYCCNT)
+#if defined(STM32G0B1xx)
+/* We use TIM2 instead of DWT->CYCCNT because the latter is not available on Cortex-M0+ cores. */
+/* This timer start in rhs_hal_cortex.c */
+#    define portGET_RUN_TIME_COUNTER_VALUE() (TIM2->CNT)
+#else
+#    define portGET_RUN_TIME_COUNTER_VALUE() (DWT->CYCCNT)
+#endif
+
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
 
 /* Cortex-M specific definitions. */

@@ -31,6 +31,8 @@ if(COMPILE_OPTS MATCHES "-mcpu=([^ ;]+)")
                 endif()
         elseif(TARGET_CPU STREQUAL "cortex-m7")
                 set(FREERTOS_PORT "GCC_ARM_CM7" CACHE STRING "" FORCE)
+        elseif(TARGET_CPU STREQUAL "cortex-m0plus")
+                set(FREERTOS_PORT "GCC_ARM_CM0" CACHE STRING "" FORCE)
         endif()
 endif()
 

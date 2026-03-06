@@ -46,3 +46,9 @@
 [submodule "thirdparty/mongoose"]
 	path = thirdparty/mongoose
 	url = https://github.com/cesanta/mongoose.git
+[submodule "thirdparty/stm32g0_cmsis"]
+	path = thirdparty/stm32g0_cmsis
+	url = https://github.com/STMicroelectronics/cmsis-device-g0
+[submodule "thirdparty/stm32g0_hal"]
+	path = thirdparty/stm32g0_hal
+	url = https://github.com/STMicroelectronics/stm32g0xx-hal-driver
