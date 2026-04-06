@@ -39,7 +39,7 @@
 	url = https://github.com/P-p-H-d/mlib.git
 [submodule "rlibs/runit"]
 	path = rlibs/runit
-	url = git@github.com:RoboticsHardwareSolutions/runit.git
+	url = https://github.com/RoboticsHardwareSolutions/runit.git
 [submodule "thirdparty/tinyusb"]
 	path = thirdparty/tinyusb
 	url = https://github.com/hathach/tinyusb.git
