@@ -42,6 +42,9 @@ Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_L a
 
 Then, in VSCode, select the "Launch Remote jlink" or "Attach Remote jlink" option and provide the necessary connection details (IP address and port number) to connect to the remote J-Link GDB Server.
 
+### Directory `core`
+Detailed file-by-file description is available in [core/README.md](core/README.md).
+
 ### Features
 **RTT CLI**
 After launching the debugging session, you can view the RTT log in the "RTT Viewer" tab in VSCode. This allows you to see real-time logs and debug messages from your application.
