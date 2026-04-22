@@ -72,6 +72,7 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET)
                 tinyusb/src/class/net/ecm_rndis_device.c
                 tinyusb/src/class/net/ncm_device.c
                 tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+                tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c
                 tinyusb/lib/networking/rndis_reports.c
 
                 tinyusb/src/class/cdc/cdc_device.c
