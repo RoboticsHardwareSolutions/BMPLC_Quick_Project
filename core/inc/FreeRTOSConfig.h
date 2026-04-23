@@ -101,6 +101,12 @@ to exclude the API function. */
 
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES 3
 
+extern __attribute__((naked, __noreturn__)) void rhs_thread_catch(void);
+/* Use rhs_thread_catch directly (no +2 offset) — it is a naked function whose
+ * first CFI rule is .cfi_undefined lr, so DWARF-based debuggers stop unwinding
+ * here and will not show garbage frames below task entry points. */
+#define configTASK_RETURN_ADDRESS rhs_thread_catch
+
 #define USE_FreeRTOS_HEAP_4
 
 #define configGENERATE_RUN_TIME_STATS 1
