@@ -9,10 +9,15 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 
 /* Memories definition */
 MEMORY
-{
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 512K
+{  
+  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 496K  /* DTCM 128K + SRAM1 368K */
+  SRAM2  (xrw)    : ORIGIN = 0x2007C000,   LENGTH = 16K   /* SRAM2: use for DMA/USB buffers (cache-safe on AHB) */
   FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
 }
+
+_sram2_start = ORIGIN(SRAM2);
+_sram2_end = ORIGIN(SRAM2) + LENGTH(SRAM2);
+_sram2_size = LENGTH(SRAM2);
 
 /* Sections */
 SECTIONS
@@ -138,6 +143,29 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  /* Crash/soft-reset log buffer in SRAM2 (survives software reset, not power cycle) */
+  /* Use a magic number field in the struct to detect valid data after reset           */
+  /* Fixed size: 0x800 (2KB), placed at the start of SRAM2                            */
+  .noinit_log (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _snoinit_log = .;
+    *(.noinit_log)
+    *(.noinit_log*)
+    . = ALIGN(4);
+    . = _snoinit_log + 0x800;
+    _enoinit_log = .;
+  } >SRAM2
+
+  /* DMA and USB buffers in SRAM2 (AHB-accessible, no D-cache issues) */
+  .sram2 (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.sram2)
+    *(.sram2*)
+    . = ALIGN(4);
+  } >SRAM2
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :
