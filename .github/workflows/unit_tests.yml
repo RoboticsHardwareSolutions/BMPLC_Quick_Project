@@ -65,7 +65,7 @@ jobs:
             [ -z "$test_name" ] && continue
             
             echo "Running test: $test_name"
-            TEST_OUTPUT=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} --no-reset --msg "$test_name" 2>&1)
+            TEST_OUTPUT=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 10 --no-reset --msg "$test_name" 2>&1)
             
             echo "$TEST_OUTPUT"
             
