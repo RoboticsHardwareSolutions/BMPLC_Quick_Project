@@ -1,0 +1,1 @@
+add_subdirectory(cdc_net_hello_rhs)

@@ -44,6 +44,7 @@ Building ${BIN_FILE}")
 
 add_subdirectory(thirdparty)
 add_subdirectory(rlibs)
+add_subdirectory(user_apps)
 add_subdirectory(user_tests)
 
 rhs_report()
