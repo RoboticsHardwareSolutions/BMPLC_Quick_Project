@@ -13,8 +13,8 @@
 
 // Network class has 2 drivers: ECM/RNDIS and NCM.
 // Only one of the drivers can be enabled
-#define CFG_TUD_ECM_RNDIS 0
-#define CFG_TUD_NCM (1 - CFG_TUD_ECM_RNDIS)
+// #define CFG_TUD_ECM_RNDIS 0
+// #define CFG_TUD_NCM (1 - CFG_TUD_ECM_RNDIS)
 
 // CDC FIFO size of TX and RX
 #define CFG_TUD_CDC_RX_BUFSIZE (64)  // Use in RAM

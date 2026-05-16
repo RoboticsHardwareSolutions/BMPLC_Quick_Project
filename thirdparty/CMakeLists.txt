@@ -68,11 +68,8 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET)
                 tinyusb/src/tusb.c
                 tinyusb/src/common/tusb_fifo.c
                 tinyusb/src/device/usbd.c
-                tinyusb/src/class/net/ecm_rndis_device.c
-                tinyusb/src/class/net/ncm_device.c
                 tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
                 tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c
-                tinyusb/lib/networking/rndis_reports.c
 
                 tinyusb/src/class/cdc/cdc_device.c
                 rhs/hal/rhs_hal_usb/usb_descriptors.c
@@ -81,8 +78,20 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET)
         target_include_directories(tinyusb
                 PUBLIC
                 ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/src
-                ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/lib/networking
         )
+        if(RHS_APPLICATION_USB_CDC_NET)
+                target_compile_definitions(tinyusb PUBLIC CFG_TUD_NCM)
+                target_include_directories(tinyusb PUBLIC
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/lib/networking
+                )
+                target_sources(tinyusb
+                        PRIVATE
+                        tinyusb/lib/networking/rndis_reports.c
+                        tinyusb/src/class/net/ecm_rndis_device.c
+                        tinyusb/src/class/net/ncm_device.c
+                )
+        endif()
+
 
         target_compile_options(tinyusb PRIVATE -Wno-conversion -Wno-sign-conversion)
         target_link_libraries(tinyusb PRIVATE freertos_kernel)
