@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: 'recursive'
           fetch-depth: 0
@@ -52,7 +52,7 @@ jobs:
         run: |
           source .venv/bin/activate
           
-          TEST_LIST=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --msg "?" 2>&1 | grep "_test" || true)
+          TEST_LIST=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --msg "?" 2>&1 | tr -s ' ' '\n' | grep "_test" || true)
           
           if [ -z "$TEST_LIST" ]; then
             echo "No tests found"
@@ -61,11 +61,11 @@ jobs:
           
           HAS_FAILURES=0
           
-          echo "$TEST_LIST" | while IFS= read -r test_name; do
+          while IFS= read -r test_name; do
             [ -z "$test_name" ] && continue
             
             echo "Running test: $test_name"
-            TEST_OUTPUT=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --no-reset --msg-timeout 10 --msg "$test_name" 2>&1)
+            TEST_OUTPUT=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 10 --no-reset --msg "$test_name" 2>&1)
             
             echo "$TEST_OUTPUT"
             
@@ -83,6 +83,6 @@ jobs:
               HAS_FAILURES=1
             fi
             echo "---"
-          done
+          done < <(echo "$TEST_LIST")
           
           exit $HAS_FAILURES
