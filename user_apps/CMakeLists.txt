@@ -1,3 +1,6 @@
 if(RHS_APPLICATION_USB_CDC_NET)
     add_subdirectory(cdc_net_hello_rhs)
 endif()
+if(RHS_APPLICATION_ETH_NET)
+    add_subdirectory(eth_net_hello_rhs)
+endif()
