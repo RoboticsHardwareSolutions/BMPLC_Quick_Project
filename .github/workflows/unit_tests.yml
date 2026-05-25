@@ -61,7 +61,7 @@ jobs:
           
           HAS_FAILURES=0
           
-          echo "$TEST_LIST" | while IFS= read -r test_name; do
+          while IFS= read -r test_name; do
             [ -z "$test_name" ] && continue
             
             echo "Running test: $test_name"
@@ -83,6 +83,6 @@ jobs:
               HAS_FAILURES=1
             fi
             echo "---"
-          done
+          done < <(echo "$TEST_LIST")
           
           exit $HAS_FAILURES
