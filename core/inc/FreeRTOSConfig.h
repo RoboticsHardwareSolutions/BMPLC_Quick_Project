@@ -29,6 +29,9 @@ extern uint32_t SystemCoreClock;
 #    ifndef CMSIS_device_header
 #        define CMSIS_device_header "stm32g0xx.h"
 #    endif /* CMSIS_device_header */
+#    ifndef configTOTAL_HEAP_SIZE
+#        define configTOTAL_HEAP_SIZE ((size_t) 64 * 1024)
+#    endif
 #else
 #    error "Unsupported STM32 series. It is necessary to define DWT->CYCCNT"
 #endif
