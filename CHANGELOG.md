@@ -1,3 +1,6 @@
+# [0.1.3] - 2026-06-23
+- Added support for STM32G0B1xx series microcontrollers in the I2C HAL driver
+
 # [0.1.2] - 2025-09-20
 
 ### Refactor

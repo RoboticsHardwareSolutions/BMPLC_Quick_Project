@@ -65,7 +65,7 @@ add_link_options(-T ${LINKER_SCRIPT})
 ### All necessary HAL libs will be included in the core by services
 
 ## set DRIVERS
-# set(RHS_DRIVER_EEPROM ON)
+set(RHS_DRIVER_EEPROM ON)
 
 ## set SERVICES
 # set(RHS_SERVICE_NOTIFICATION ON)

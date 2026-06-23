@@ -11,11 +11,7 @@ static EepromType at24c256;
 
 void eeprom_full_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -58,11 +54,7 @@ void eeprom_full_test(void)
 
 void eeprom_overwrite_first3bytes_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -104,11 +96,7 @@ void eeprom_overwrite_first3bytes_test(void)
 
 void eeprom_partial_page_write_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -158,11 +146,7 @@ void eeprom_partial_page_write_test(void)
 
 void eeprom_page_boundary_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -190,11 +174,7 @@ void eeprom_page_boundary_test(void)
 
 void eeprom_size_limit_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -229,11 +209,7 @@ void eeprom_size_limit_test(void)
 
 void eeprom_random_access_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
 
@@ -269,22 +245,18 @@ void eeprom_random_access_test(void)
 
 void eeprom_multi_page_write_test(void)
 {
-    if (!rhs_hal_i2c_is_device_ready(&rhs_hal_i2c1_handle, 0x50, 100))
-    {
-        printf("no device connected, skipping\r\n");
-        return;
-    }
+    runit_assert(rhs_hal_i2c_is_device_ready(at24c256.i2c_handle, at24c256.i2c_address, 100));
 
     EepromStatus status;
-    
+
     // Choose a random address and write across multiple pages
-    uint16_t start_addr = (uint16_t)(rhs_hal_random_get() % (at24c256.size - 200));
-    uint16_t write_len = 150; // More than 2 pages (64*2 = 128)
+    uint16_t start_addr = (uint16_t) (rhs_hal_random_get() % (at24c256.size - 200));
+    uint16_t write_len  = 150;  // More than 2 pages (64*2 = 128)
 
     // Prepare test data
     uint8_t write_data[200];
     for (uint16_t i = 0; i < write_len; ++i)
-        write_data[i] = (uint8_t)((rhs_hal_random_get() + i) & 0xFF);
+        write_data[i] = (uint8_t) ((rhs_hal_random_get() + i) & 0xFF);
 
     // Write data across multiple pages
     status = eeprom_write(&at24c256, start_addr, write_data, write_len);
@@ -314,8 +286,8 @@ void eeprom_test(char* args, void* context)
     at24c256.timeout_ms     = 100;
 
     // Initialize I2C interface
-    rhs_hal_i2c_init(&rhs_hal_i2c1_handle);
-    rhs_hal_i2c_acquire(&rhs_hal_i2c1_handle);
+    rhs_hal_i2c_init(at24c256.i2c_handle);
+    rhs_hal_i2c_acquire(at24c256.i2c_handle);
 
     // Initialize EEPROM library
     EepromStatus status = eeprom_init(&at24c256);
@@ -330,9 +302,8 @@ void eeprom_test(char* args, void* context)
     eeprom_random_access_test();
     // eeprom_full_test(); // Uncomment for full EEPROM test (takes longer)
 
-    
-    rhs_hal_i2c_release(&rhs_hal_i2c1_handle);
-    rhs_hal_i2c_deinit(&rhs_hal_i2c1_handle);
+    rhs_hal_i2c_release(at24c256.i2c_handle);
+    rhs_hal_i2c_deinit(at24c256.i2c_handle);
 
     runit_report();
 }
