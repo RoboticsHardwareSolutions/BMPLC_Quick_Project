@@ -50,5 +50,5 @@ void cdc_net_hello_rhs_start_up(void)
 {
     Net* net;
     Cli* cli = rhs_record_open(RECORD_CLI);
-    cli_add_command(cli, "usb_cdc_app", usb_cdc_app_cli, NULL);
+    cli_add_command(cli, "usb_cdc_net_app", usb_cdc_app_cli, NULL);
 }
