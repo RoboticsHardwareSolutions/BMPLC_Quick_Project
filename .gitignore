@@ -5,3 +5,4 @@ tests/cmake-*
 /Release
 /build
 /.vscode/settings.json
+/.cache
