@@ -1,0 +1,58 @@
+[io.connection]
+    port = "/dev/USB_SERIAL_IO"
+    inputs_id = 1
+    ouputs_id = 2
+    baudrate = 115200
+    timeout = 1.5              # Device slave response timeout
+    retries = 3                # Number of repetitions
+
+
+[io.map.inputs]     # Read Holding registers for input states
+    register_type = "holding"  # type: holding, input, discrete, coil
+    start_address = 0          # Start address
+    count = 2                  # number of registers (16-bit each, total 32 bits)
+
+    [io.map.inputs.labels] # bit offsets mapping (key = string bit index)
+        "0" = "PLC_XL_OUT0"
+        "1" = "PLC_XL_OUT1"
+        "2" = "PLC_XL_OUT2"
+        "3" = "PLC_XL_OUT3"
+        "4" = "PLC_XL_OUT4"
+        "11" = "PLC_XL_KEY0"
+        "12" = "PLC_XL_KEY1"
+        "13" = "PLC_XL_KEY2"
+        "14" = "PLC_XL_KEY4"
+        "15" = "PLC_XL_KEY3"
+        "5" = "PLC_M_OUT0"
+        "6" = "PLC_M_OUT1"
+        "7" = "PLC_M_OUT2"
+        "8" = "PLC_M_OUT3"
+        "9" = "PLC_M_OUT4"
+        "16" = "PLC_M_KEY0"
+        "17" = "PLC_M_KEY1"
+        "18" = "PLC_M_KEY2"
+        "19" = "PLC_M_KEY4"
+        "20" = "PLC_M_KEY3"
+
+[io.map.outputs] # Write outputs
+    register_type = "coil"
+    start_address = 1
+    count = 32
+
+    [io.map.outputs.labels] # coil address mapping (key = string address)
+        "1" = "PLC_XL_IN0"
+        "2" = "PLC_XL_IN1"
+        "3" = "PLC_XL_IN2"
+        "4" = "PLC_XL_IN3"
+        "5" = "PLC_XL_IN4"
+        "6" = "PLC_M_IN0"
+        "7" = "PLC_M_IN1"
+        "8" = "PLC_M_IN2"
+        "9" = "PLC_M_IN3"
+        "10" = "PLC_M_IN4"
+        "11" = "USB_PLC_M"
+        "12" = "USB_PLC_XL"
+        "13" = "USB_RS232"
+        "14" = "USB_EMPTY"
+        "15" = "PWR_PLC_XL"
+        "16" = "PWR_PLC_M"
