@@ -37,3 +37,18 @@
 [submodule "thirdparty/stm32g0_hal"]
 	path = thirdparty/stm32g0_hal
 	url = https://github.com/STMicroelectronics/stm32g0xx-hal-driver
+[submodule "thirdparty/rcan"]
+	path = thirdparty/rcan
+	url = https://github.com/RoboticsHardwareSolutions/rcan.git
+[submodule "thirdparty/co_stack"]
+	path = thirdparty/co_stack
+	url = https://github.com/RoboticsHardwareSolutions/co_stack.git
+[submodule "thirdparty/rserial"]
+	path = thirdparty/rserial
+	url = https://github.com/RoboticsHardwareSolutions/rserial.git
+[submodule "thirdparty/rtimer"]
+	path = thirdparty/rtimer
+	url = https://github.com/RoboticsHardwareSolutions/rtimer.git
+[submodule "thirdparty/runit"]
+	path = thirdparty/runit
+	url = https://github.com/RoboticsHardwareSolutions/runit.git
