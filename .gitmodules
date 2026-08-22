@@ -16,30 +16,15 @@
 [submodule "thirdparty/rhs"]
 	path = thirdparty/rhs
 	url = https://github.com/RoboticsHardwareSolutions/RHS-BareMetalCore.git
-[submodule "rlibs/rcan"]
-	path = rlibs/rcan
-	url = https://github.com/RoboticsHardwareSolutions/rcan.git
-[submodule "rlibs/rserial"]
-	path = rlibs/rserial
-	url = https://github.com/RoboticsHardwareSolutions/rserial.git
-[submodule "rlibs/rtimer"]
-	path = rlibs/rtimer
-	url = https://github.com/RoboticsHardwareSolutions/rtimer.git
 [submodule "thirdparty/stm32f1_cmsis"]
 	path = thirdparty/stm32f1_cmsis
 	url = https://github.com/STMicroelectronics/cmsis-device-f1.git
 [submodule "thirdparty/stm32f1_hal"]
 	path = thirdparty/stm32f1_hal
 	url = https://github.com/STMicroelectronics/stm32f1xx-hal-driver.git
-[submodule "rlibs/co_stack"]
-	path = rlibs/co_stack
-	url = https://github.com/RoboticsHardwareSolutions/co_stack.git
 [submodule "thirdparty/mlib"]
 	path = thirdparty/mlib
 	url = https://github.com/P-p-H-d/mlib.git
-[submodule "rlibs/runit"]
-	path = rlibs/runit
-	url = https://github.com/RoboticsHardwareSolutions/runit.git
 [submodule "thirdparty/tinyusb"]
 	path = thirdparty/tinyusb
 	url = https://github.com/hathach/tinyusb.git
@@ -52,3 +37,18 @@
 [submodule "thirdparty/stm32g0_hal"]
 	path = thirdparty/stm32g0_hal
 	url = https://github.com/STMicroelectronics/stm32g0xx-hal-driver
+[submodule "thirdparty/rcan"]
+	path = thirdparty/rcan
+	url = https://github.com/RoboticsHardwareSolutions/rcan.git
+[submodule "thirdparty/co_stack"]
+	path = thirdparty/co_stack
+	url = https://github.com/RoboticsHardwareSolutions/co_stack.git
+[submodule "thirdparty/rserial"]
+	path = thirdparty/rserial
+	url = https://github.com/RoboticsHardwareSolutions/rserial.git
+[submodule "thirdparty/rtimer"]
+	path = thirdparty/rtimer
+	url = https://github.com/RoboticsHardwareSolutions/rtimer.git
+[submodule "thirdparty/runit"]
+	path = thirdparty/runit
+	url = https://github.com/RoboticsHardwareSolutions/runit.git
