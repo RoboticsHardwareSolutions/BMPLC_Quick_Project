@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
-project(eeprom_test C)
+project(flash_ex_test C)
 set(CMAKE_C_STANDARD 11)
 
-add_library(${PROJECT_NAME} STATIC eeprom_test.c)
+add_library(${PROJECT_NAME} STATIC flash_ex_unit_test.c)
 
 target_include_directories(
         ${PROJECT_NAME} PUBLIC
@@ -15,7 +15,6 @@ target_link_libraries(${PROJECT_NAME}
         rhs_hal
         runit
         cli
-        eeprom
 )
 
-test(rhs_eeprom_test)
+test(flash_ex_test)
