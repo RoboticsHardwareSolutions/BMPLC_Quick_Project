@@ -4,7 +4,7 @@
 #include "cli.h"
 #include "eeprom.h"
 
-#define TEST_RECORD_NAME "test_eeprom"
+#define TEST_RECORD_NAME "eeprom_test"
 
 /* EEPROM instance for testing */
 static EepromType at24c256;

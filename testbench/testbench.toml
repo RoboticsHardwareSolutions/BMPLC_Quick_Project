@@ -1,0 +1,71 @@
+[io.connection]
+    port = "/dev/tty.usbserial-21140"
+    inputs_id = 1
+    ouputs_id = 2
+    baudrate = 115200
+    timeout = 1.5              # Device slave response timeout
+    retries = 3                # Number of repetitions
+
+
+[io.map.inputs]     # Read Holding registers for input states
+    register_type = "holding"  # type: holding, input, discrete, coil
+    start_address = 0          # Start address
+    count = 2                  # number of registers (16-bit each, total 32 bits)
+
+    [io.map.inputs.labels] # bit offsets mapping (key = string bit index)
+        "31" = "PLC_XL_OUT0"
+        "30" = "PLC_XL_OUT1"
+        "29" = "PLC_XL_OUT2"
+        "28" = "PLC_XL_OUT3"
+        "27" = "PLC_XL_OUT4"
+        "26" = "PLC_XL_KEY0"
+        "25" = "PLC_XL_KEY1"
+        "24" = "PLC_XL_KEY2"
+        "23" = "PLC_XL_KEY3"
+        "22" = "PLC_XL_KEY4"
+        "6" = "PLC_M_OUT0"
+        "7" = "PLC_M_OUT1"
+        "8" = "PLC_M_OUT2"
+        "9" = "PLC_M_OUT3"
+        "10" = "PLC_M_OUT4"
+        "11" = "PLC_M_KEY0"
+        "12" = "PLC_M_KEY1"
+        "13" = "PLC_M_KEY2"
+        "14" = "PLC_M_KEY4"
+        "15" = "PLC_M_KEY3"
+
+[io.map.outputs] # Write outputs
+    register_type = "coil"
+    start_address = 1
+    count = 32
+
+    [io.map.outputs.labels] # coil address mapping (key = string address)
+        "0" = "PLC_M_IN0"
+        "1" = "PLC_M_IN1"
+        "2" = "PLC_M_IN2"
+        "3" = "PLC_M_IN3"
+        "4" = "PLC_M_IN4"
+        "11" = "PLC_XL_IN0"
+        "12" = "PLC_XL_IN1"
+        "13" = "PLC_XL_IN2"
+        "14" = "PLC_XL_IN3"
+        "15" = "PLC_XL_IN4"
+        "6" = "USB_PLC_M"
+        "7" = "USB_PLC_XL"
+        "8" = "USB_RS232" #button on hub pressed on testbench
+        "9" = "USB_EMPTY"
+        "10" = "PWR_PLC_XL"
+        "5" = "PWR_PLC_M"
+
+
+[iface.canbus]
+    port = "/dev/tty.usbserial-DN0536AY"
+
+[iface.rs422]
+    port = "/dev/tty.usbserial-0000D4A3"
+
+[iface.rs485]
+    port = "/dev/tty.usbserial-00007902"
+
+[iface.rs232]
+    port = "/dev/tty.usbserial-21230"
