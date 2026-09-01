@@ -1,7 +1,16 @@
 #pragma once
 
 #define TUD_OPT_RHPORT 0
-#define CFG_TUSB_MCU OPT_MCU_STM32F1
+/* Defined in cmake */
+#if defined(STM32G0B1xx)
+#    define CFG_TUSB_MCU OPT_MCU_STM32G0
+#elif defined(STM32F103xE)
+#    define CFG_TUSB_MCU OPT_MCU_STM32F1
+#elif defined(STM32F407xx)
+#    define CFG_TUSB_MCU OPT_MCU_STM32F4
+#elif defined(STM32F765xx)
+#    define CFG_TUSB_MCU OPT_MCU_STM32F7
+#endif
 #define CFG_TUSB_OS OPT_OS_FREERTOS
 #define CFG_TUSB_DEBUG 0
 #define CFG_TUH_ENABLED 0

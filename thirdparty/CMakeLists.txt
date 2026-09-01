@@ -68,12 +68,26 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET OR RHS_APPLICATI
                 tinyusb/src/tusb.c
                 tinyusb/src/common/tusb_fifo.c
                 tinyusb/src/device/usbd.c
-                tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
-                tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c
-
                 tinyusb/src/class/cdc/cdc_device.c
                 rhs/hal/rhs_hal_usb/usb_descriptors.c
         )
+
+        # Choose portable-driver by target MCU
+        if(TARGET_CPU STREQUAL "cortex-m3" OR TARGET_CPU STREQUAL "cortex-m0plus") # STM32F103, STM32G0B1 — USB FSDev
+                target_sources(tinyusb PRIVATE
+                        tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+                        tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c
+                )
+        else() # cortex-m4/m7 → STM32F4 / STM32F7 — Synopsys DWC2
+                target_sources(tinyusb PRIVATE
+                        tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c
+                        tinyusb/src/portable/synopsys/dwc2/dwc2_common.c
+                )
+                target_include_directories(tinyusb
+                        PUBLIC
+                        ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/src/portable/synopsys/dwc2
+                )
+        endif()
 
         target_include_directories(tinyusb
                 PUBLIC

@@ -1,3 +1,6 @@
+# [0.1.4] - 2026-09-01
+- Supported USB OTG FS on STM32F7xx series microcontrollers with dual CDC and NCM functionality
+
 # [0.1.3] - 2026-06-23
 - Added support for STM32G0B1xx series microcontrollers in the I2C HAL driver
 
