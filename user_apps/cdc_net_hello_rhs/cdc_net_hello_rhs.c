@@ -8,6 +8,8 @@ static void http_fn(struct mg_connection* c, int ev, void* ev_data)
         struct mg_http_serve_opts opts = {0};
         opts.root_dir                  = "/dist";
         opts.fs                        = &mg_fs_packed;
+        mg_mem_files                   = mg_packed_files;
+
         mg_http_serve_dir(c, ev_data, &opts);
     }
 }

@@ -5,5 +5,3 @@
 #elif defined(__GNUC__)
 #    define MG_STMPACK_ARCH MG_ARCH_NEWLIB
 #endif
-
-#define MG_ARCH MG_ARCH_FREERTOS
