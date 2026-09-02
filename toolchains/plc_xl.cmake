@@ -33,13 +33,13 @@ add_compile_definitions(ARM_MATH_CM7;ARM_MATH_MATRIX_CHECK;ARM_MATH_ROUNDING)
 add_compile_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
 add_link_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
 add_link_options(-Wl,-gc-sections,--print-memory-usage)
-add_link_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork)
+add_link_options(-mcpu=cortex-m7 -mthumb)
 #add_link_options(-T ${LINKER_SCRIPT})
 
 #Uncomment for software floating point
 #add_compile_options(-mfloat-abi=soft)
 
-add_compile_options(-mcpu=cortex-m7 -mthumb -mthumb-interwork)
+add_compile_options(-mcpu=cortex-m7 -mthumb)
 add_compile_options(-ffunction-sections -fdata-sections -fno-common -fmessage-length=0)
 
 # uncomment to mitigate c++17 absolute addresses warnings
@@ -82,11 +82,16 @@ set(RHS_HAL_RANDOM ON)
 
 ## set SERVICES
 set(RHS_SERVICE_NOTIFICATION ON)
-set(RHS_APPLICATION_ETH_NET ON)
 
-set(RHS_ETH_NET_IP "192.168.1.102")
-set(RHS_ETH_NET_GATEWAY "192.168.1.1")
+set(RHS_APPLICATION_ETH_NET ON)
+set(RHS_ETH_NET_IP "192.168.2.100")
+set(RHS_ETH_NET_GATEWAY "192.168.2.1")
 set(RHS_ETH_NET_NETMASK "255.255.255.0")
+
+set(RHS_APPLICATION_USB_CDC_NET ON)
+set(RHS_CDC_NET_IP "192.168.3.100")
+set(RHS_CDC_NET_GATEWAY "192.168.3.1")
+set(RHS_CDC_NET_NETMASK "255.255.255.0")
 
 ## set TESTS
 set(RHS_TEST_MEMMNG ON)
