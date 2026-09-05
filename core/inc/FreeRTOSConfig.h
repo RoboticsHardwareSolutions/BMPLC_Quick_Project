@@ -7,25 +7,22 @@ extern uint32_t SystemCoreClock;
 #endif
 
 #if defined(BMPLC_XL) || defined(BMPLC_L)
-#    include "stm32f7xx_hal.h"
-#    ifndef CMSIS_device_header
-#        define CMSIS_device_header "stm32f7xx.h"
-#    endif /* CMSIS_device_header */
+#    include "stm32f7xx.h"
 #    ifndef configTOTAL_HEAP_SIZE
 #        define configTOTAL_HEAP_SIZE ((size_t) 64 * 1024)
 #    endif
 #elif defined(BMPLC_M)
-#    include "stm32f1xx_hal.h"
+#    include "stm32f1xx.h"
 #    ifndef configTOTAL_HEAP_SIZE
 #        define configTOTAL_HEAP_SIZE ((size_t) 38 * 1024)
 #    endif
 #elif defined(STM32F405xx) || defined(STM32F407xx)
-#    include "stm32f4xx_hal.h"
+#    include "stm32f4xx.h"
 #    ifndef CMSIS_device_header
 #        define CMSIS_device_header "stm32f4xx.h"
 #    endif /* CMSIS_device_header */
 #elif defined(STM32G0B1xx)
-#    include "stm32g0xx_hal.h"
+#    include "stm32g0xx.h"
 #    ifndef CMSIS_device_header
 #        define CMSIS_device_header "stm32g0xx.h"
 #    endif /* CMSIS_device_header */
@@ -113,13 +110,8 @@ extern __attribute__((naked, __noreturn__)) void rhs_thread_catch(void);
 #define USE_FreeRTOS_HEAP_4
 
 #define configGENERATE_RUN_TIME_STATS 1
-#if defined(STM32G0B1xx)
-/* We use TIM2 instead of DWT->CYCCNT because the latter is not available on Cortex-M0+ cores. */
-/* This timer start in rhs_hal_cortex.c */
-#    define portGET_RUN_TIME_COUNTER_VALUE() (TIM2->CNT)
-#else
-#    define portGET_RUN_TIME_COUNTER_VALUE() (DWT->CYCCNT)
-#endif
+extern uint32_t rhs_hal_cortex_get_ticks(void);
+#define portGET_RUN_TIME_COUNTER_VALUE() (rhs_hal_cortex_get_ticks())
 
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
 

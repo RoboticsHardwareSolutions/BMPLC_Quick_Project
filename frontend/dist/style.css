@@ -1,0 +1,112 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background: #1a1a2e;
+    color: #eee;
+}
+
+.card {
+    text-align: center;
+    padding: 2rem;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: #16213e;
+}
+
+h1 {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+}
+
+p {
+    color: #aaa;
+}
+
+.tasks-card {
+    margin-top: 1.5rem;
+    padding: 1.5rem 2rem;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: #16213e;
+    width: min(560px, 90vw);
+    box-sizing: border-box;
+}
+
+.tasks-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.tasks-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tasks-card th {
+    text-align: left;
+    color: #aaa;
+    font-weight: normal;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #444;
+}
+
+.tasks-card td {
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.bar {
+    position: relative;
+    height: 10px;
+    background: #0f3460;
+    border-radius: 5px;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: #e94560;
+    border-radius: 5px;
+}
+
+.pct {
+    color: #aaa;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.status {
+    color: #aaa;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.status.error {
+    color: #e94560;
+}
+
+.refresh-btn {
+    margin-top: 1rem;
+    background: #0f3460;
+    color: #eee;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.refresh-btn:hover {
+    background: #16213e;
+}
