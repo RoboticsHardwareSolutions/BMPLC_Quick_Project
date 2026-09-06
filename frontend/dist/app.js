@@ -6,6 +6,23 @@
   var refreshBtn = document.getElementById('refresh-btn');
   var inFlight = false;
 
+  function get_info() {
+    fetch('/api/info', { headers: { 'Accept': 'application/json' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var infoHeader = document.getElementById('bmplc_type');
+        if (infoHeader) {
+          infoHeader.textContent = data.bmplc_type || 'Unknown';
+        }
+      })
+      .catch(function () {
+        showError('No data: server is not responding at ' + '/api/info');
+      })
+  }
+
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (ch) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
@@ -54,13 +71,9 @@
     contentEl.textContent = msg;
   }
 
-  function load(background) {
+  function load() {
     if (inFlight) return;
     inFlight = true;
-    if (!background) {
-      contentEl.className = 'status';
-      contentEl.textContent = 'Loading...';
-    }
     fetch(API_URL, { headers: { 'Accept': 'application/json' } })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -77,7 +90,8 @@
       });
   }
 
-  refreshBtn.addEventListener('click', function () { load(false); });
-  load(false);
-  setInterval(function () { load(true); }, 100);
+  refreshBtn.addEventListener('click', function () { load(); });
+  get_info();
+  load();
+  setInterval(function () { load(); }, 250);
 })();
