@@ -1,13 +1,172 @@
+/* BMPLC web frontend — layout: IO area on the left, info/tasks on the right */
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
     margin: 0;
     background: #1a1a2e;
     color: #eee;
+    font-family: sans-serif;
+}
+
+.layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+/* ---------------- IO area (left) ---------------- */
+
+.io-card {
+    background: #16213e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+}
+
+.io-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.io-group-title {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #aaa;
+    text-align: center;
+}
+
+/* Relay switches drawn as a contact pair joined by a lever line */
+.relay-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.relay-btn {
+    display: block;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.relay-btn:active {
+    transform: scale(0.94);
+}
+
+.relay-btn svg {
+    width: 100px;
+    height: 30px;
+    display: block;
+}
+
+.relay-btn .term {
+    fill: #0f3460;
+    stroke: #444;
+    stroke-width: 1.5;
+}
+
+.relay-btn:hover .term {
+    stroke: #888;
+}
+
+.relay-btn .lever {
+    stroke: #eee;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* Default state: contact open (angled lever shown, closed bar hidden) */
+.relay-btn .lever-closed {
+    display: none;
+}
+
+.relay-btn.on .lever-open {
+    display: none;
+}
+
+.relay-btn.on .lever-closed {
+    display: inline;
+    stroke: #e94560;
+}
+
+.relay-btn.on .term {
+    stroke: #e94560;
+}
+
+/* Two columns of small round items: inputs left, outputs right */
+.io-columns {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.io-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.io-col-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.io-ind,
+.io-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: #0f3460;
+    border: 2px solid #444;
+    border-radius: 50%;
+}
+
+.io-btn {
+    cursor: pointer;
+}
+
+.io-btn:hover {
+    background: #12386b;
+    border-color: #888;
+}
+
+.io-btn:active {
+    transform: scale(0.88);
+}
+
+.io-ind.on,
+.io-btn.on {
+    background: #e94560;
+    border-color: #994560;
+}
+
+.io-hint {
+    margin: 1rem 0 0;
+    font-size: 0.75rem;
+    color: #aaa;
+    text-align: center;
+}
+
+/* ---------------- Info / tasks (right) ---------------- */
+
+.main-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .card {
@@ -23,18 +182,12 @@ h1 {
     font-size: 2rem;
 }
 
-p {
-    color: #aaa;
-}
-
 .tasks-card {
-    margin-top: 1.5rem;
     padding: 1.5rem 2rem;
     border: 1px solid #444;
     border-radius: 8px;
     background: #16213e;
     width: min(560px, 90vw);
-    box-sizing: border-box;
 }
 
 .tasks-card h2 {

@@ -1,25 +1,28 @@
 (function () {
   'use strict';
 
-  var API_URL = '/api/tasks';
+  var API_URL_INFO = '/api/info';
+  var infoHeader = document.getElementById('bmplc-type');
+  var serialHeader = document.getElementById('serial');
+
+
+  var API_URL_TASKS = '/api/tasks';
   var contentEl = document.getElementById('tasks-content');
   var refreshBtn = document.getElementById('refresh-btn');
   var inFlight = false;
 
   function get_info() {
-    fetch('/api/info', { headers: { 'Accept': 'application/json' } })
+    fetch(API_URL_INFO, { headers: { 'Accept': 'application/json' } })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function (data) {
-        var infoHeader = document.getElementById('bmplc_type');
-        if (infoHeader) {
-          infoHeader.textContent = data.bmplc_type || 'Unknown';
-        }
+        infoHeader.textContent = data.bmplcType || 'Unknown';
+        serialHeader.textContent = data.serial || 'Unknown';
       })
       .catch(function () {
-        showError('No data: server is not responding at ' + '/api/info');
+        showError('No data: server is not responding at ' + API_URL_INFO);
       })
   }
 
@@ -36,13 +39,13 @@
         : null;
     if (!list) return [];
     return list.map(function (t) {
-      var name = t.task || t.name || t.Task || '?';
-      var priority = t.priority != null ? t.priority : (t.Priority != null ? t.Priority : null);
-      var load = t.load != null ? t.load : (t.Load != null ? t.Load : t.cpu != null ? t.cpu : null);
-      var stack_min_free = t.stack_min_free != null ? t.stack_min_free : (t.StackMinFree != null ? t.StackMinFree : null);
+      var name = t.task || '?';
+      var priority = t.priority || 0;
+      var load = t.load || 0;
+      var stackMinFree = t.stackMinFree || 0;
       var num = parseFloat(load);
       if (!isFinite(num)) num = null;
-      return { name: name, load: num, priority: priority, stack_min_free: stack_min_free };
+      return { name: name, load: num, priority: priority, stackMinFree: stackMinFree };
     });
   }
 
@@ -59,7 +62,7 @@
         '<td><div class="bar"><div class="bar-fill" style="width:' + width + '%"></div></div></td>' +
         '<td class="pct">' + esc(pct) + '</td>' +
         '<td>' + esc(t.priority) + '</td>' +
-        '<td>' + esc(t.stack_min_free) + '</td></tr>';
+        '<td>' + esc(t.stackMinFree) + '</td></tr>';
     }).join('');
     contentEl.className = '';
     contentEl.innerHTML =
@@ -74,7 +77,7 @@
   function load() {
     if (inFlight) return;
     inFlight = true;
-    fetch(API_URL, { headers: { 'Accept': 'application/json' } })
+    fetch(API_URL_TASKS, { headers: { 'Accept': 'application/json' } })
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
@@ -83,7 +86,7 @@
         render(normalize(data));
       })
       .catch(function () {
-        showError('No data: server is not responding at ' + API_URL);
+        showError('No data: server is not responding at ' + API_URL_TASKS);
       })
       .then(function () {
         inFlight = false;
@@ -93,5 +96,88 @@
   refreshBtn.addEventListener('click', function () { load(); });
   get_info();
   load();
-  setInterval(function () { load(); }, 250);
+  setInterval(function () { load(); }, 500);
+
+  // --- Discrete I/O panel ---
+  var ioIndicators = document.querySelectorAll('.io-ind');
+  var relayButtons = document.querySelectorAll('.relay-btn');
+  var doButtons = document.querySelectorAll('.io-btn');
+  var ioButtons = document.querySelectorAll('.relay-btn, .io-btn');
+  var ioInFlight = false;
+
+  function set_states(elements, values) {
+    if (!values) return;
+    for (var i = 0; i < elements.length; i++) {
+      if (values[i]) {
+        elements[i].classList.add('on');
+      } else {
+        elements[i].classList.remove('on');
+      }
+    }
+  }
+
+  function render_io(data) {
+    // Bitmask: bits 0-4 inputs, bits 5-9 relays, bits 10-14 outputs
+    if (typeof data !== 'number' || data < 0 || data > 32767) return;
+    var bits = function (start) {
+      var r = [];
+      for (var i = 0; i < 5; i++)
+        r.push(((data >> (start + i)) & 1) === 1);
+      return r;
+    };
+    set_states(ioIndicators, bits(0));
+    set_states(relayButtons, bits(5));
+    set_states(doButtons, bits(10));
+  }
+
+  function load_io() {
+    if (ioInFlight) return;
+    ioInFlight = true;
+    fetch('/api/io', { headers: { 'Accept': 'application/json' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        render_io(data);
+      })
+      .catch(function () {
+        // IO endpoint may be unavailable on some boards: stay silent
+      })
+      .then(function () {
+        ioInFlight = false;
+      });
+  }
+
+  for (var b = 0; b < ioButtons.length; b++) {
+    (function (btn) {
+      btn.addEventListener('click', function () {
+        var group = btn.getAttribute('data-group');
+        var index = parseInt(btn.getAttribute('data-index'), 10);
+        var on = !btn.classList.contains('on');
+        fetch('/api/io', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ group: group, index: index, on: on })
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function () {
+            if (on) {
+              btn.classList.add('on');
+            } else {
+              btn.classList.remove('on');
+            }
+          })
+          .catch(function () {
+            // Ignore: the next poll restores the real state
+          });
+      });
+    })(ioButtons[b]);
+  }
+
+  load_io();
+  setInterval(function () { load_io(); }, 250);
 })();
