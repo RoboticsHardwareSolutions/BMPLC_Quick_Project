@@ -11,6 +11,17 @@
 <body>
   <div class="layout">
 
+    <header>
+      <div class="header-card">
+        <h2 id="bmplc-type">BMPLC</h2>
+        <p id="serial">serial</p>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-btn active" type="button" data-lang="ru">RU</button>
+        <button class="lang-btn" type="button" data-lang="en">EN</button>
+      </div>
+    </header>
+
     <aside class="io-card">
       <h2>Ввод / вывод</h2>
 
@@ -74,11 +85,16 @@
         <div class="io-col">
           <h3 class="io-group-title">Выходы</h3>
           <div class="io-col-items">
-            <button class="io-btn" type="button" data-group="do" data-index="0" aria-label="Выход 1" title="Выход 1"></button>
-            <button class="io-btn" type="button" data-group="do" data-index="1" aria-label="Выход 2" title="Выход 2"></button>
-            <button class="io-btn" type="button" data-group="do" data-index="2" aria-label="Выход 3" title="Выход 3"></button>
-            <button class="io-btn" type="button" data-group="do" data-index="3" aria-label="Выход 4" title="Выход 4"></button>
-            <button class="io-btn" type="button" data-group="do" data-index="4" aria-label="Выход 5" title="Выход 5"></button>
+            <button class="io-btn" type="button" data-group="do" data-index="0" aria-label="Выход 1"
+              title="Выход 1"></button>
+            <button class="io-btn" type="button" data-group="do" data-index="1" aria-label="Выход 2"
+              title="Выход 2"></button>
+            <button class="io-btn" type="button" data-group="do" data-index="2" aria-label="Выход 3"
+              title="Выход 3"></button>
+            <button class="io-btn" type="button" data-group="do" data-index="3" aria-label="Выход 4"
+              title="Выход 4"></button>
+            <button class="io-btn" type="button" data-group="do" data-index="4" aria-label="Выход 5"
+              title="Выход 5"></button>
           </div>
         </div>
       </div>
@@ -86,15 +102,9 @@
     </aside>
 
     <main class="main-col">
-      <div class="card">
-        <h1 id="bmplc-type">BMPLC</h1>
-        <h2 id="serial"></h2>
-      </div>
-
       <div class="tasks-card">
         <h2>Task Load</h2>
-        <div id="tasks-content" class="status">Loading...</div>
-        <button class="refresh-btn" id="refresh-btn" type="button">Refresh</button>
+        <div id="tasks-content"></div>
       </div>
     </main>
 

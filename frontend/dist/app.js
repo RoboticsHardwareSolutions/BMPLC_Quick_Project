@@ -1,6 +1,44 @@
 (function () {
   'use strict';
 
+  var I18N = {
+    ru: {
+      ioTitle: 'Ввод / вывод',
+      groupRelays: 'Реле',
+      groupInputs: 'Входы',
+      groupOutputs: 'Выходы',
+      tasksTitle: 'Панель задач',
+      noData: 'Нет данных',
+      unknown: 'Неизвестно',
+      errPrefix: 'Нет данных: сервер не отвечает по адресу ',
+      relayPrefix: 'Реле ',
+      doPrefix: 'Выход ',
+      inPrefix: 'Вход ',
+      thTask: 'Задача',
+      thLoad: 'Нагрузка',
+      thPriority: 'Приоритет',
+      thStack: 'Стек, мин. свободно'
+    },
+    en: {
+      ioTitle: 'I/O',
+      groupRelays: 'Relays',
+      groupInputs: 'Inputs',
+      groupOutputs: 'Outputs',
+      tasksTitle: 'Task Load',
+      noData: 'No data',
+      unknown: 'Unknown',
+      errPrefix: 'No data: server is not responding at ',
+      relayPrefix: 'Relay ',
+      doPrefix: 'Output ',
+      inPrefix: 'Input ',
+      thTask: 'Task',
+      thLoad: 'Load',
+      thPriority: 'Priority',
+      thStack: 'Stack Min Free'
+    }
+  };
+  var currentLang = 'ru';
+
   var API_URL_INFO = '/api/info';
   var infoHeader = document.getElementById('bmplc-type');
   var serialHeader = document.getElementById('serial');
@@ -8,8 +46,68 @@
 
   var API_URL_TASKS = '/api/tasks';
   var contentEl = document.getElementById('tasks-content');
-  var refreshBtn = document.getElementById('refresh-btn');
   var inFlight = false;
+
+  function t(key) {
+    return I18N[currentLang][key];
+  }
+
+  function apply(lang) {
+    if (!I18N[lang]) {
+      lang = 'ru';
+    }
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    localStorage.setItem('bmplc-lang', lang);
+
+    var ioTitle = document.querySelector('.io-card h2');
+    if (ioTitle) {
+      ioTitle.textContent = t('ioTitle');
+    }
+    var groupTitles = document.querySelectorAll('.io-group-title');
+    for (var i = 0; i < groupTitles.length; i++) {
+      groupTitles[i].textContent = t(i === 0 ? 'groupRelays' : i === 1 ? 'groupInputs' : 'groupOutputs');
+    }
+    var tasksTitle = document.querySelector('.tasks-card h2');
+    if (tasksTitle) {
+      tasksTitle.textContent = t('tasksTitle');
+    }
+
+    var relayButtons = document.querySelectorAll('.relay-btn');
+    for (var r = 0; r < relayButtons.length; r++) {
+      var rn = parseInt(relayButtons[r].getAttribute('data-index'), 10) + 1;
+      var rt = t('relayPrefix') + rn;
+      relayButtons[r].setAttribute('title', rt);
+      relayButtons[r].setAttribute('aria-label', rt);
+    }
+    var doButtons = document.querySelectorAll('.io-btn');
+    for (var d = 0; d < doButtons.length; d++) {
+      var dn = parseInt(doButtons[d].getAttribute('data-index'), 10) + 1;
+      var dt = t('doPrefix') + dn;
+      doButtons[d].setAttribute('title', dt);
+      doButtons[d].setAttribute('aria-label', dt);
+    }
+    var ioIndicators = document.querySelectorAll('.io-ind');
+    for (var n = 0; n < ioIndicators.length; n++) {
+      ioIndicators[n].setAttribute('title', t('inPrefix') + (n + 1));
+    }
+
+    var langButtons = document.querySelectorAll('.lang-btn');
+    for (var b = 0; b < langButtons.length; b++) {
+      if (langButtons[b].getAttribute('data-lang') === lang) {
+        langButtons[b].classList.add('active');
+      } else {
+        langButtons[b].classList.remove('active');
+      }
+    }
+  }
+
+  var langButtons = document.querySelectorAll('.lang-btn');
+  for (var lb = 0; lb < langButtons.length; lb++) {
+    langButtons[lb].addEventListener('click', function () {
+      apply(this.getAttribute('data-lang'));
+    });
+  }
 
   function get_info() {
     fetch(API_URL_INFO, { headers: { 'Accept': 'application/json' } })
@@ -18,11 +116,12 @@
         return res.json();
       })
       .then(function (data) {
-        infoHeader.textContent = data.bmplcType || 'Unknown';
-        serialHeader.textContent = data.serial || 'Unknown';
+        infoHeader.textContent = data.bmplcType || 'BMPLC';
+        serialHeader.textContent = data.serial || 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
       })
       .catch(function () {
-        showError('No data: server is not responding at ' + API_URL_INFO);
+        infoHeader.textContent = 'BMPLC';
+        serialHeader.textContent = 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
       })
   }
 
@@ -51,8 +150,7 @@
 
   function render(tasks) {
     if (!tasks.length) {
-      contentEl.className = 'status';
-      contentEl.textContent = 'No data';
+      contentEl.textContent = t('noData');
       return;
     }
     var rows = tasks.map(function (t) {
@@ -64,14 +162,11 @@
         '<td>' + esc(t.priority) + '</td>' +
         '<td>' + esc(t.stackMinFree) + '</td></tr>';
     }).join('');
-    contentEl.className = '';
     contentEl.innerHTML =
-      '<table><tr><th>Task</th><th>Load</th><th>%</th><th>Priority</th><th>Stack Min Free</th></tr>' + rows + '</table>';
+      '<table><tr><th>' + t('thTask') + '</th><th>' + t('thLoad') + '</th><th>' + '%' + '</th><th>' + t('thPriority') + '</th><th>' + t('thStack') + '</th></tr>' + rows + '</table>';
   }
 
   function showError(msg) {
-    contentEl.className = 'status error';
-    contentEl.textContent = msg;
   }
 
   function load() {
@@ -86,14 +181,13 @@
         render(normalize(data));
       })
       .catch(function () {
-        showError('No data: server is not responding at ' + API_URL_TASKS);
+        showError(t('errPrefix') + API_URL_TASKS);
       })
       .then(function () {
         inFlight = false;
       });
   }
 
-  refreshBtn.addEventListener('click', function () { load(); });
   get_info();
   load();
   setInterval(function () { load(); }, 500);
@@ -180,4 +274,5 @@
 
   load_io();
   setInterval(function () { load_io(); }, 250);
+  apply(localStorage.getItem('bmplc-lang') || 'ru');
 })();

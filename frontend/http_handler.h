@@ -1,7 +1,9 @@
 #pragma once
 #include "rhs.h"
 #include "rhs_hal.h"
+#include "rhs_version.h"
 #include "mongoose.h"
+#include <stdio.h>
 
 static inline void io_relay_write(size_t index, bool on)
 {
@@ -72,21 +74,24 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                         uid[10],
                         uid[11]  // 32 - bits
                 );
+                char v_str[10];
+                sprintf(v_str, "v%d.%d.%d", PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH);
                 mg_http_reply(c,
                               200,
                               "Content-Type: application/json\r\n",
-                              "{%m:%m, %m:%m}",
+                              "{%m:%m, %m:%m, %m:%m}",
                               MG_ESC("serial"),
                               MG_ESC(uid_str),
                               MG_ESC("bmplcType"),
 #if defined(BMPLC_M)
-                              MG_ESC("BMPLC_M")
+                              MG_ESC("BMPLC_M"),
 #elif defined(BMPLC_XL)
-                              MG_ESC("BMPLC_XL")
+                              MG_ESC("BMPLC_XL"),
 #else
-                              MG_ESC("Custom")
+                              MG_ESC("Custom"),
 #endif
-                );
+                              MG_ESC("version"),
+                              MG_ESC(v_str));
             }
         }
         else if (mg_match(hm->uri, mg_str("/api/tasks"), NULL))
@@ -102,7 +107,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 rhs_thread_enumerate(thread_list);
                 count = rhs_thread_list_size(thread_list);
 
-                static char body[1024]; // Save stack
+                static char body[1024];  // Save stack
                 size_t      off = 0;
 
                 for (size_t i = 0; i < count; i++)
