@@ -60,18 +60,14 @@
     document.documentElement.lang = lang;
     localStorage.setItem('bmplc-lang', lang);
 
-    var ioTitle = document.querySelector('.io-card h2');
-    if (ioTitle) {
-      ioTitle.textContent = t('ioTitle');
-    }
+    document.querySelector('.io-card h2').textContent = t('ioTitle');
+    
     var groupTitles = document.querySelectorAll('.io-group-title');
     for (var i = 0; i < groupTitles.length; i++) {
       groupTitles[i].textContent = t(i === 0 ? 'groupRelays' : i === 1 ? 'groupInputs' : 'groupOutputs');
     }
-    var tasksTitle = document.querySelector('.tasks-card h2');
-    if (tasksTitle) {
-      tasksTitle.textContent = t('tasksTitle');
-    }
+
+    document.querySelector('.tasks-card h2').textContent = t('tasksTitle');
 
     var relayButtons = document.querySelectorAll('.relay-btn');
     for (var r = 0; r < relayButtons.length; r++) {
