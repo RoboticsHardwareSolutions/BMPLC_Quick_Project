@@ -308,6 +308,7 @@ h1 {
 }
 
 .bridge-panel {
+    visibility: hidden;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -340,12 +341,6 @@ h1 {
 
 .bridge-btn:last-child {
     margin-bottom: 0;
-}
-
-.bridge-empty {
-    color: var(--muted);
-    font-size: 0.85rem;
-    text-align: center;
 }
 
 .bridge-warn {

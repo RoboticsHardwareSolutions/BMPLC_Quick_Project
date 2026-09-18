@@ -66,7 +66,7 @@
     localStorage.setItem('bmplc-lang', lang);
 
     document.querySelector('.io-card h2').textContent = t('ioTitle');
-    
+
     var groupTitles = document.querySelectorAll('.io-group-title');
     for (var i = 0; i < groupTitles.length; i++) {
       groupTitles[i].textContent = t(i === 0 ? 'groupRelays' : i === 1 ? 'groupInputs' : 'groupOutputs');
@@ -300,11 +300,8 @@
   }
 
   function renderBridges() {
-    if (!bridgeListEl || !bridgesData) return;
-    if (!bridgesData.length) {
-      bridgeListEl.innerHTML = '<p class="bridge-empty">' + t('bridgeNone') + '</p>';
-      return;
-    }
+    if (!bridgeListEl || !bridgesData || !bridgesData.length) return;
+    document.getElementById('bridge-panel').style.visibility = 'visible';
     bridgeListEl.innerHTML = bridgesData.map(function (b) {
       var isUsb = (b.port + ':' + b.type).indexOf('usb') !== -1;
       var warn = isUsb
