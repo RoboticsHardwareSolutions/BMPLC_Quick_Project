@@ -4,10 +4,19 @@
     box-sizing: border-box;
 }
 
+:root {
+    --card: #16213e;
+    --accent: #e94560;
+    --fill: #0f3460;
+    --border: #444;
+    --muted: #aaa;
+    --text: #eee;
+}
+
 body {
     margin: 0;
     background: #1a1a2e;
-    color: #eee;
+    color: var(--text);
     font-family: sans-serif;
 }
 
@@ -30,8 +39,8 @@ header {
 /* ---------------- IO area (left) ---------------- */
 
 .io-card {
-    background: #16213e;
-    border: 1px solid #444;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
 }
@@ -46,7 +55,7 @@ header {
     margin: 0 0 0.6rem;
     font-size: 0.8rem;
     font-weight: normal;
-    color: #aaa;
+    color: var(--muted);
     text-align: center;
 }
 
@@ -78,8 +87,8 @@ header {
 }
 
 .relay-btn .term {
-    fill: #0f3460;
-    stroke: #444;
+    fill: var(--fill);
+    stroke: var(--border);
     stroke-width: 1.5;
 }
 
@@ -88,7 +97,7 @@ header {
 }
 
 .relay-btn .lever {
-    stroke: #eee;
+    stroke: var(--text);
     stroke-width: 2;
     stroke-linecap: round;
 }
@@ -104,11 +113,11 @@ header {
 
 .relay-btn.on .lever-closed {
     display: inline;
-    stroke: #e94560;
+    stroke: var(--accent);
 }
 
 .relay-btn.on .term {
-    stroke: #e94560;
+    stroke: var(--accent);
 }
 
 /* Two columns of small round items: inputs left, outputs right */
@@ -136,8 +145,8 @@ header {
     width: 20px;
     height: 20px;
     padding: 0;
-    background: #0f3460;
-    border: 2px solid #444;
+    background: var(--fill);
+    border: 2px solid var(--border);
     border-radius: 50%;
 }
 
@@ -156,14 +165,14 @@ header {
 
 .io-ind.on,
 .io-btn.on {
-    background: #e94560;
+    background: var(--accent);
     border-color: #994560;
 }
 
 .io-hint {
     margin: 1rem 0 0;
     font-size: 0.75rem;
-    color: #aaa;
+    color: var(--muted);
     text-align: center;
 }
 
@@ -181,9 +190,9 @@ header {
     position: relative;
     text-align: center;
     padding: 2rem;
-    border: 1px solid #444;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #16213e;
+    background: var(--card);
 }
 
 h1 {
@@ -193,9 +202,9 @@ h1 {
 
 .tasks-card {
     padding: 1.5rem 2rem;
-    border: 1px solid #444;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #16213e;
+    background: var(--card);
     width: min(560px, 90vw);
 }
 
@@ -213,10 +222,10 @@ h1 {
 
 .tasks-card th {
     text-align: left;
-    color: #aaa;
+    color: var(--muted);
     font-weight: normal;
     padding: 0.35rem 0.5rem;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border);
 }
 
 .tasks-card td {
@@ -227,7 +236,7 @@ h1 {
 .bar {
     position: relative;
     height: 10px;
-    background: #0f3460;
+    background: var(--fill);
     border-radius: 5px;
     overflow: hidden;
     min-width: 120px;
@@ -238,18 +247,14 @@ h1 {
     left: 0;
     top: 0;
     bottom: 0;
-    background: #e94560;
+    background: var(--accent);
     border-radius: 5px;
 }
 
 .pct {
-    color: #aaa;
+    color: var(--muted);
     white-space: nowrap;
     text-align: right;
-}
-
-.refresh-btn:hover {
-    background: #16213e;
 }
 
 .header-card {    
@@ -259,9 +264,9 @@ h1 {
     align-items: flex-start;
     gap: 0.2rem;
     padding: 0.4rem 1.25rem;
-    border: 1px solid #444;
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: #16213e;
+    background: var(--card);
 }
 
 .header-card h2 {
@@ -284,9 +289,9 @@ h1 {
 }
 
 .lang-btn {
-    background: #0f3460;
-    color: #eee;
-    border: 1px solid #444;
+    background: var(--fill);
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.5rem 1.25rem;
     font-size: 0.9rem;
@@ -298,6 +303,83 @@ h1 {
 }
 
 .lang-btn.active {
-    background: #e94560;
-    border-color: #e94560;
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.bridge-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    width: min(320px, 90vw);
+}
+
+.bridge-panel h2 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.bridge-btn {
+    display: block;
+    width: 100%;
+    background: var(--fill);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.bridge-btn:hover {
+    background: #12386b;
+    border-color: #888;
+}
+
+.bridge-btn:last-child {
+    margin-bottom: 0;
+}
+
+.bridge-empty {
+    color: var(--muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.bridge-warn {
+    position: relative;
+    display: inline-block;
+    margin-left: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    cursor: help;
+    font-size: 0.75rem;
+    width: 1.1em;
+    height: 1.1em;
+    line-height: 1.1em;
+}
+
+.bridge-warn:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-105%);
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    white-space: normal;
+    width: max-content;
+    max-width: 200px;
+    text-align: left;
+    z-index: 10;
+    pointer-events: none;
 }

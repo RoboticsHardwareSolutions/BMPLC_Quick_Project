@@ -4,6 +4,12 @@
 #include "rhs_version.h"
 #include "mongoose.h"
 #include <stdio.h>
+#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
+#include "usb_serial_bridge.h"
+#endif
+#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+#include "usb_eth_bridge.h"
+#endif
 
 static inline void io_relay_write(size_t index, bool on)
 {
@@ -133,6 +139,75 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
 
                 // rhs_thread_list_destroy(thread_list);
                 mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:[%s]}", MG_ESC("tasks"), body);
+            }
+        }
+        else if (mg_match(hm->uri, mg_str("/api/bridges"), NULL))
+        {
+            if (!mg_strcmp(hm->method, mg_str("GET")))
+            {
+                static char body[1024];  // Save stack
+                size_t      off = 0;
+
+#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
+                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs232\"}", (off > 0) ? "," : "");
+                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs485\"}", (off > 0) ? "," : "");
+                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"rs232\":\"rs485\"}", (off > 0) ? "," : "");
+#endif
+#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"eth\"}", (off > 0) ? "," : "");
+#endif
+                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"can\"}", (off > 0) ? "," : "");
+                if (off != 0)
+                    mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:[%s]}", MG_ESC("bridges"), body);
+                else
+                    mg_http_reply(c, 204, "Content-Type: 0\r\n", "");
+            }
+            else if (!mg_strcmp(hm->method, mg_str("POST")))
+            {
+                int           poff  = 0;
+                int           plen  = 0;
+                int           toff  = 0;
+                int           tlen  = 0;
+                struct mg_str port  = mg_str_n("", 0);
+                struct mg_str type  = mg_str_n("", 0);
+
+                poff = mg_json_get(hm->body, "$.port", &plen);
+                if (poff >= 0 && plen >= 2 && hm->body.buf != NULL && (size_t) poff + (size_t) plen <= hm->body.len &&
+                    hm->body.buf[poff] == '"')
+                {
+                    port = mg_str_n(hm->body.buf + poff + 1, (size_t) plen - 2);
+                }
+
+                toff = mg_json_get(hm->body, "$.type", &tlen);
+                if (toff >= 0 && tlen >= 2 && hm->body.buf != NULL && (size_t) toff + (size_t) tlen <= hm->body.len &&
+                    hm->body.buf[toff] == '"')
+                {
+                    type = mg_str_n(hm->body.buf + toff + 1, (size_t) tlen - 2);
+                }
+
+                if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs232")))
+                {
+#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
+                    UsbSerialConfig cfg = {
+                        .vcp_ch         = 0,
+                        .serial_ch      = RHSHalSerialIdRS232,
+                        .flow_pins      = 0,
+                        .baudrate_mode  = 0,
+                        .baudrate       = 9600,
+                        .software_de_re = 0,
+                    };
+                    (void) usb_serial_enable(&cfg);
+#endif
+                }
+
+                if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("eth")))
+                {
+#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+                    (void) usb_eth_bridge_start(NULL);
+#endif
+                }
+
+                mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:%s}", MG_ESC("ok"), "true");
             }
         }
         else if (mg_match(hm->uri, mg_str("/api/io"), NULL))

@@ -17,7 +17,9 @@
       thTask: 'Задача',
       thLoad: 'Нагрузка',
       thPriority: 'Приоритет',
-      thStack: 'Стек, мин. свободно'
+      thStack: 'Стек, мин. свободно',
+      bridgesTitle: 'Мосты', bridgeBaud: 'Скорость', bridgeIp: 'IP-адрес', bridgeEnable: 'Включен', bridgeNoSettings: 'Нет настроек', bridgeNone: 'Мосты не обнаружены',
+      bridgeWarn: 'USB-устройство переконфигурируется; веб-интерфейс будет недоступен'
     },
     en: {
       ioTitle: 'I/O',
@@ -34,7 +36,9 @@
       thTask: 'Task',
       thLoad: 'Load',
       thPriority: 'Priority',
-      thStack: 'Stack Min Free'
+      thStack: 'Stack Min Free',
+      bridgesTitle: 'Bridges', bridgeBaud: 'Baud rate', bridgeIp: 'IP address', bridgeEnable: 'Enabled', bridgeNoSettings: 'No settings', bridgeNone: 'No bridges found',
+      bridgeWarn: 'USB device is being reconfigured; the web interface will be unavailable'
     }
   };
   var currentLang = 'ru';
@@ -42,6 +46,7 @@
   var API_URL_INFO = '/api/info';
   var infoHeader = document.getElementById('bmplc-type');
   var serialHeader = document.getElementById('serial');
+  var versionHeader = document.getElementById('version');
 
 
   var API_URL_TASKS = '/api/tasks';
@@ -96,6 +101,10 @@
         langButtons[b].classList.remove('active');
       }
     }
+
+    var bridgeTitle = document.getElementById('bridge-title');
+    if (bridgeTitle) bridgeTitle.textContent = t('bridgesTitle');
+    renderBridges();
   }
 
   var langButtons = document.querySelectorAll('.lang-btn');
@@ -114,10 +123,12 @@
       .then(function (data) {
         infoHeader.textContent = data.bmplcType || 'BMPLC';
         serialHeader.textContent = data.serial || 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
+        versionHeader.textContent = data.version || 'v0.0.0';
       })
       .catch(function () {
         infoHeader.textContent = 'BMPLC';
         serialHeader.textContent = 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
+        versionHeader.textContent = 'v0.0.0';
       })
   }
 
@@ -271,4 +282,72 @@
   load_io();
   setInterval(function () { load_io(); }, 250);
   apply(localStorage.getItem('bmplc-lang') || 'ru');
+
+  var API_URL_BRIDGES = '/api/bridges';
+  var bridgeListEl = document.getElementById('bridge-list');
+  var bridgesData = null;
+
+  function normalizeBridges(data) {
+    if (!data || !Array.isArray(data.bridges)) return [];
+    return data.bridges.map(function (item) {
+      for (var k in item) {
+        if (Object.prototype.hasOwnProperty.call(item, k)) {
+          return { port: k, type: item[k] };
+        }
+      }
+      return { port: '?', type: '?' };
+    });
+  }
+
+  function renderBridges() {
+    if (!bridgeListEl || !bridgesData) return;
+    if (!bridgesData.length) {
+      bridgeListEl.innerHTML = '<p class="bridge-empty">' + t('bridgeNone') + '</p>';
+      return;
+    }
+    bridgeListEl.innerHTML = bridgesData.map(function (b) {
+      var isUsb = (b.port + ':' + b.type).indexOf('usb') !== -1;
+      var warn = isUsb
+        ? '<span class="bridge-warn" data-tip="' + esc(t('bridgeWarn')) + '">!</span>'
+        : '';
+      return '<button class="bridge-btn" type="button" data-port="' + esc(b.port) + '" data-type="' + esc(b.type) + '">' + esc(b.port + ':' + b.type) + warn + '</button>';
+    }).join('');
+  }
+
+  function loadBridges() {
+    fetch(API_URL_BRIDGES).then(function (res) {
+      if (res.status === 204) return { bridges: [] };
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      bridgesData = normalizeBridges(data);
+      renderBridges();
+    }).catch(function () {
+      bridgesData = [];
+      renderBridges();
+    });
+  }
+
+  if (bridgeListEl) {
+    bridgeListEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.bridge-btn');
+      if (!btn) return;
+      var port = btn.getAttribute('data-port');
+      var type = btn.getAttribute('data-type');
+      fetch(API_URL_BRIDGES, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ port: port, type: type })
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .catch(function () {
+          // Ignore errors: the backend stub will handle retries
+        });
+    });
+  }
+
+  loadBridges();
 })();
