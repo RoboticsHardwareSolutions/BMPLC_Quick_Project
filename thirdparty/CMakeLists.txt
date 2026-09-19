@@ -46,7 +46,7 @@ add_library(RTT STATIC
 )
 
 target_compile_definitions(RTT PUBLIC -DBUFFER_SIZE_DOWN=64)
-target_compile_definitions(RTT PUBLIC -DBUFFER_SIZE_UP=4096)
+target_compile_definitions(RTT PUBLIC -DBUFFER_SIZE_UP=1024)
 
 target_include_directories(RTT
         PUBLIC

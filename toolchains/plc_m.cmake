@@ -67,7 +67,7 @@ add_link_options(-T ${LINKER_SCRIPT})
 add_definitions(-DBMPLC_M)
 
 ## set HAL
-### All necessary HAL libs will be included in the core by services
+set(RHS_HAL_IO ON)
 
 ## set DRIVERS
 set(RHS_DRIVER_EEPROM ON)

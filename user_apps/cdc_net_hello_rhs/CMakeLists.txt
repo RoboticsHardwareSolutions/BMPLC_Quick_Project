@@ -6,6 +6,10 @@ add_library(${PROJECT_NAME} STATIC
     cdc_net_hello_rhs.c
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}../../frontend
+)
+
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
