@@ -173,9 +173,6 @@
       '<table><tr><th>' + t('thTask') + '</th><th>' + t('thLoad') + '</th><th>' + '%' + '</th><th>' + t('thPriority') + '</th><th>' + t('thStack') + '</th></tr>' + rows + '</table>';
   }
 
-  function showError(msg) {
-  }
-
   function load() {
     if (inFlight) return;
     inFlight = true;
@@ -348,3 +345,19 @@
 
   loadBridges();
 })();
+
+function showError(message, duration = 2000) {
+  const container = document.getElementById('toast-container');
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, duration);
+}

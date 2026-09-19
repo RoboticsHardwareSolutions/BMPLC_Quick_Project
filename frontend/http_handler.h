@@ -5,10 +5,10 @@
 #include "mongoose.h"
 #include <stdio.h>
 #if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
-#include "usb_serial_bridge.h"
+#    include "usb_serial_bridge.h"
 #endif
 #if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
-#include "usb_eth_bridge.h"
+#    include "usb_eth_bridge.h"
 #endif
 
 static inline void io_relay_write(size_t index, bool on)
@@ -151,7 +151,6 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
 #if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs232\"}", (off > 0) ? "," : "");
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs485\"}", (off > 0) ? "," : "");
-                off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"rs232\":\"rs485\"}", (off > 0) ? "," : "");
 #endif
 #if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"eth\"}", (off > 0) ? "," : "");
@@ -164,12 +163,12 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
             }
             else if (!mg_strcmp(hm->method, mg_str("POST")))
             {
-                int           poff  = 0;
-                int           plen  = 0;
-                int           toff  = 0;
-                int           tlen  = 0;
-                struct mg_str port  = mg_str_n("", 0);
-                struct mg_str type  = mg_str_n("", 0);
+                int           poff = 0;
+                int           plen = 0;
+                int           toff = 0;
+                int           tlen = 0;
+                struct mg_str port = mg_str_n("", 0);
+                struct mg_str type = mg_str_n("", 0);
 
                 poff = mg_json_get(hm->body, "$.port", &plen);
                 if (poff >= 0 && plen >= 2 && hm->body.buf != NULL && (size_t) poff + (size_t) plen <= hm->body.len &&
@@ -185,27 +184,33 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                     type = mg_str_n(hm->body.buf + toff + 1, (size_t) tlen - 2);
                 }
 
+#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
+                UsbSerialConfig cfg = {
+                    .vcp_ch         = 0,
+                    .flow_pins      = 0,
+                    .baudrate_mode  = 0,
+                    .baudrate       = 9600,
+                    .software_de_re = 0,
+                };
+
                 if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs232")))
                 {
-#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
-                    UsbSerialConfig cfg = {
-                        .vcp_ch         = 0,
-                        .serial_ch      = RHSHalSerialIdRS232,
-                        .flow_pins      = 0,
-                        .baudrate_mode  = 0,
-                        .baudrate       = 9600,
-                        .software_de_re = 0,
-                    };
+                    cfg.serial_ch = RHSHalSerialIdRS232;
                     (void) usb_serial_enable(&cfg);
-#endif
                 }
+                else if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs485")))
+                {
+                    cfg.serial_ch = RHSHalSerialIdRS485;
+                    (void) usb_serial_enable(&cfg);
+                }
+#endif
 
+#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
                 if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("eth")))
                 {
-#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
                     (void) usb_eth_bridge_start(NULL);
-#endif
                 }
+#endif
 
                 mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:%s}", MG_ESC("ok"), "true");
             }
