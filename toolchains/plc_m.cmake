@@ -32,12 +32,12 @@ add_compile_definitions(ARM_MATH_CM3;ARM_MATH_MATRIX_CHECK;ARM_MATH_ROUNDING)
 #add_compile_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
 #add_link_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
 add_link_options(-Wl,-gc-sections,--print-memory-usage)
-add_link_options(-mcpu=cortex-m3 -mthumb -mthumb-interwork)
+add_link_options(-mcpu=cortex-m3 -mthumb)
 
 #Uncomment for software floating point
 #add_compile_options(-mfloat-abi=soft)
 
-add_compile_options(-mcpu=cortex-m3 -mthumb -mthumb-interwork)
+add_compile_options(-mcpu=cortex-m3 -mthumb)
 add_compile_options(-ffunction-sections -fdata-sections -fno-common -fmessage-length=0)
 
 # uncomment to mitigate c++17 absolute addresses warnings
@@ -67,7 +67,7 @@ add_link_options(-T ${LINKER_SCRIPT})
 add_definitions(-DBMPLC_M)
 
 ## set HAL
-### All necessary HAL libs will be included in the core by services
+set(RHS_HAL_IO ON)
 
 ## set DRIVERS
 set(RHS_DRIVER_EEPROM ON)
@@ -76,7 +76,12 @@ set(RHS_DRIVER_EEPROM ON)
 set(RHS_SERVICE_NOTIFICATION ON)
 set(RHS_SERVICE_USB_SERIAL_BRIDGE ON)
 set(RHS_SERVICE_CAN_OPEN ON)
+
 set(RHS_APPLICATION_USB_CDC_NET ON)
+set(RHS_CDC_NET_IP "192.168.3.100")
+set(RHS_CDC_NET_GATEWAY "192.168.3.1")
+set(RHS_CDC_NET_NETMASK "255.255.255.0")
+
 
 ## set TESTS
 

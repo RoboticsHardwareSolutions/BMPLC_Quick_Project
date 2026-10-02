@@ -1,0 +1,410 @@
+/* BMPLC web frontend — layout: IO area on the left, info/tasks on the right */
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --card: #16213e;
+    --accent: #e94560;
+    --fill: #0f3460;
+    --border: #444;
+    --muted: #aaa;
+    --text: #eee;
+}
+
+body {
+    margin: 0;
+    background: #1a1a2e;
+    color: var(--text);
+    font-family: sans-serif;
+}
+
+.layout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.5rem;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+header {
+    flex: 1 1 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+/* ---------------- IO area (left) ---------------- */
+
+.io-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+}
+
+.io-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.io-group-title {
+    margin: 0 0 0.6rem;
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: var(--muted);
+    text-align: center;
+}
+
+/* Relay switches drawn as a contact pair joined by a lever line */
+.relay-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.relay-btn {
+    display: block;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.relay-btn:active {
+    transform: scale(0.94);
+}
+
+.relay-btn svg {
+    width: 100px;
+    height: 30px;
+    display: block;
+}
+
+.relay-btn .term {
+    fill: var(--fill);
+    stroke: var(--border);
+    stroke-width: 1.5;
+}
+
+.relay-btn:hover .term {
+    stroke: #888;
+}
+
+.relay-btn .lever {
+    stroke: var(--text);
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* Default state: contact open (angled lever shown, closed bar hidden) */
+.relay-btn .lever-closed {
+    display: none;
+}
+
+.relay-btn.on .lever-open {
+    display: none;
+}
+
+.relay-btn.on .lever-closed {
+    display: inline;
+    stroke: var(--accent);
+}
+
+.relay-btn.on .term {
+    stroke: var(--accent);
+}
+
+/* Two columns of small round items: inputs left, outputs right */
+.io-columns {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.io-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.io-col-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.io-ind,
+.io-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: var(--fill);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+}
+
+.io-btn {
+    cursor: pointer;
+}
+
+.io-btn:hover {
+    background: #12386b;
+    border-color: #888;
+}
+
+.io-btn:active {
+    transform: scale(0.88);
+}
+
+.io-ind.on,
+.io-btn.on {
+    background: var(--accent);
+    border-color: #994560;
+}
+
+.io-hint {
+    margin: 1rem 0 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+}
+
+/* ---------------- Info / tasks (right) ---------------- */
+
+.main-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.card {
+    position: relative;
+    text-align: center;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+}
+
+h1 {
+    margin: 0 0 0.5rem;
+    font-size: 2rem;
+}
+
+.tasks-card {
+    padding: 1.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    width: min(560px, 90vw);
+}
+
+.tasks-card h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.tasks-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.tasks-card th {
+    text-align: left;
+    color: var(--muted);
+    font-weight: normal;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.tasks-card td {
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid #2a2a4a;
+}
+
+.bar {
+    position: relative;
+    height: 10px;
+    background: var(--fill);
+    border-radius: 5px;
+    overflow: hidden;
+    min-width: 120px;
+}
+
+.bar-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--accent);
+    border-radius: 5px;
+}
+
+.pct {
+    color: var(--muted);
+    white-space: nowrap;
+    text-align: right;
+}
+
+.header-card {    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.2rem;
+    padding: 0.4rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+}
+
+.header-card h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.header-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.lang-switch {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lang-btn {
+    background: var(--fill);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.lang-btn:hover {
+    border-color: #888;
+}
+
+.lang-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.bridge-panel {
+    visibility: hidden;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    width: min(320px, 90vw);
+}
+
+.bridge-panel h2 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.bridge-btn {
+    display: block;
+    width: 100%;
+    background: var(--fill);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+}
+
+.bridge-btn:hover {
+    background: #12386b;
+    border-color: #888;
+}
+
+.bridge-btn:last-child {
+    margin-bottom: 0;
+}
+
+.bridge-warn {
+    position: relative;
+    display: inline-block;
+    margin-left: 0.5rem;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    cursor: help;
+    font-size: 0.75rem;
+    width: 1.1em;
+    height: 1.1em;
+    line-height: 1.1em;
+}
+
+.bridge-warn:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-105%);
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    white-space: normal;
+    width: max-content;
+    max-width: 200px;
+    text-align: left;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+  }
+
+  .toast {
+    background: var(--accent);
+    color: var(--text);
+    padding: 14px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-size: 14px;
+    min-width: 250px;
+    max-width: 350px;
+
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(0);
+  }

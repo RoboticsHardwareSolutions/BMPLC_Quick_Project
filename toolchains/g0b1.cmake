@@ -30,7 +30,7 @@ endif()
 
 add_link_options(-Wl,-gc-sections,--print-memory-usage)
 
-add_compile_options(-mcpu=cortex-m0plus -mthumb -mthumb-interwork)
+add_compile_options(-mcpu=cortex-m0plus -mthumb)
 add_compile_options(-ffunction-sections -fdata-sections -fno-common -fmessage-length=0)
 add_link_options(-mcpu=cortex-m0plus -mthumb)
 

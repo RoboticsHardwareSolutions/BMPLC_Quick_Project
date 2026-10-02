@@ -1,16 +1,6 @@
 #include "eth_net.h"
 #include "cli.h"
-
-static void http_fn(struct mg_connection* c, int ev, void* ev_data)
-{
-    if (ev == MG_EV_HTTP_MSG)
-    {
-        struct mg_http_serve_opts opts = {0};
-        opts.root_dir                  = "/dist";
-        opts.fs                        = &mg_fs_packed;
-        mg_http_serve_dir(c, ev_data, &opts);
-    }
-}
+#include "../../frontend/http_handler.h"
 
 static void eth_net_app_cli(char* args, void* context)
 {

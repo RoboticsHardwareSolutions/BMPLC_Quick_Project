@@ -1,16 +1,6 @@
 #include "usb_cdc_net.h"
 #include "cli.h"
-
-static void http_fn(struct mg_connection* c, int ev, void* ev_data)
-{
-    if (ev == MG_EV_HTTP_MSG)
-    {
-        struct mg_http_serve_opts opts = {0};
-        opts.root_dir                  = "/dist";
-        opts.fs                        = &mg_fs_packed;
-        mg_http_serve_dir(c, ev_data, &opts);
-    }
-}
+#include "../../frontend/http_handler.h"
 
 static void usb_cdc_app_cli(char* args, void* context)
 {
@@ -48,7 +38,6 @@ static void usb_cdc_app_cli(char* args, void* context)
 
 void cdc_net_hello_rhs_start_up(void)
 {
-    Net* net;
-    Cli* cli = rhs_record_open(RECORD_CLI);
-    cli_add_command(cli, "usb_cdc_net_app", usb_cdc_app_cli, NULL);
+    Net* net = usb_cdc_net_start(NULL);
+    net_start_http(net, "http://0.0.0.0", http_fn, NULL);
 }

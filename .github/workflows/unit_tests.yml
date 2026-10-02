@@ -11,16 +11,23 @@ jobs:
     runs-on: [self-hosted]
     strategy:
       matrix:
-        plc_type: ["BMPLC_M", "BMPLC_XL"]
+        plc_type: ["BMPLC_M", "BMPLC_XL", "G0B1"]
         include:
           - plc_type: "BMPLC_M"
             jlink_serial: 'JLINK_SERIAL_CI_BMPLC_M'
             mcu: "STM32F103RE"
             build_dir: "build_m"
+            test: true
           - plc_type: "BMPLC_XL"
             jlink_serial: 'JLINK_SERIAL_CI_BMPLC_XL'
             mcu: "STM32F765ZG"
             build_dir: "build_xl"
+            test: true
+          - plc_type: "G0B1"
+            jlink_serial: 'JLINK_SERIAL_CI_G0B1'
+            mcu: "STM32G0B1KC"
+            build_dir: "build_g0b1"
+            test: false
     name: Build ${{ matrix.plc_type }}
 
     steps:
@@ -42,6 +49,7 @@ jobs:
           cmake --build .
 
       - name: Flash firmware
+        if: matrix.test == true
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
@@ -49,7 +57,9 @@ jobs:
           bml flash ${{ matrix.build_dir }}/bmplc.bin --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }}
 
       - name: Run unit tests
+        if: matrix.test == true
         run: |
+
           source .venv/bin/activate
           
           TEST_LIST=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --msg "?" 2>&1 | tr -s ' ' '\n' | grep "_test" || true)
