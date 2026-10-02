@@ -31,12 +31,12 @@
 		{
 			"label": "BlackMagic RTT Terminal Teardown",
 			"type": "shell",
-			"command": "killall nc screen 2>/dev/null || true"
+			"command": "killall nc screen socat 2>/dev/null || true"
 		},
 		{
 			"label": "BlackMagic RTT Terminal",
 			"type": "shell",
-			"command": "echo 'Starting RTT...'; TARGET='${input:BlackMagicRTT}'; if [[ $TARGET == *:* ]]; then nc ${TARGET%%:*} ${TARGET##*:}; else screen $TARGET 115200; fi; echo 'RTT Terminated'",
+			"command": "chmod +x .vscode/rtt_terminal.sh; TARGET='${input:BlackMagicRTT}'; echo 'Starting RTT...'; bash .vscode/rtt_terminal.sh \"$TARGET\"",
 			"isBackground": true,
 			"problemMatcher": [
 				{
@@ -81,7 +81,7 @@
 		{
 			"type": "promptString",
 			"id": "BlackMagicRTT",
-			"description": "BlackMagic RTT: tty device or ip:port",
+			"description": "BlackMagic RTT: /dev/cu.* [@[baud]] or host:port",
 			"default": "192.168.1.100:2332"
 		}
 	],
