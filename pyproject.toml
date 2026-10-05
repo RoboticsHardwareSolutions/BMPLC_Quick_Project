@@ -2,4 +2,13 @@
 name = "bmplc"
 version = "0.1.0"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pymodbus[serial]>=3.8.0",
+    "bmlab-toolkit",
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+# Anchors rootdir at the repo root so the root conftest.py (HIL fixtures) is
+# always loaded; norecursedirs keeps plain `pytest` out of thirdparty/builds.
+norecursedirs = ["*.egg", ".*", "_darcs", "build", "build_*", "cmake-build-*", "CVS", "dist", "node_modules", "venv", ".venv", "thirdparty"]

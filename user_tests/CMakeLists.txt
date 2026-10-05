@@ -13,3 +13,7 @@ endif()
 if(RHS_TEST_FLASH_EX)
     add_subdirectory(flash_ex_test)
 endif()
+
+if(RHS_TEST_IO)
+    add_subdirectory(io_test)
+endif()

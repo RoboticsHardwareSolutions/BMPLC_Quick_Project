@@ -1,3 +1,13 @@
+[targets.plc_m]
+    mcu = "STM32F103RE"
+    jlink_serial = "..."
+
+
+[targets.plc_xl]
+    mcu = "STM32F765ZG"
+    jlink_serial = "..."
+
+
 [io.connection]
     port = "/dev/tty.usbserial-21140"
     inputs_id = 1
