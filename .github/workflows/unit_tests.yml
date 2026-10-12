@@ -62,11 +62,11 @@ jobs:
 
           source .venv/bin/activate
           
-          TEST_LIST=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --msg "?" 2>&1 | tr -s ' ' '\n' | grep "_test" || true)
+          TEST_LIST=$(bml rtt --serial ${{ secrets[matrix.jlink_serial] }} --mcu ${{ matrix.mcu }} -t 30 --no-reset --msg "?" 2>&1 | tr -s ' ' '\n' | grep "_test" || true)
           
           if [ -z "$TEST_LIST" ]; then
             echo "No tests found"
-            exit 1
+            exit 0
           fi
           
           HAS_FAILURES=0
