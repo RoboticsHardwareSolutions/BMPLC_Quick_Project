@@ -126,14 +126,6 @@ if(RHS_APPLICATION_ETH_NET OR RHS_APPLICATION_USB_CDC_NET)
                 PUBLIC
                 freertos_kernel
         )
-
-        target_sources(mongoose PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/rhs/applications/services/net/log/mongoose_log.c)
-        target_compile_definitions(mongoose PUBLIC MG_ENABLE_CUSTOM_LOG=1)
-        target_include_directories(mongoose
-                PUBLIC
-                ${CMAKE_SOURCE_DIR}/thirdparty/rhs/applications/services/net/log
-                ${CMAKE_SOURCE_DIR}/thirdparty/rhs/
-        )
 endif()
 
 ####################### RHS lib ############################
