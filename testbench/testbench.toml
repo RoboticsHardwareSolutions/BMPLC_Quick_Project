@@ -12,7 +12,7 @@
     # macOS: use /dev/cu.* here, not /dev/tty.* -- the tty.* node waits on carrier-detect
     # semantics that this adapter never satisfies, which makes every Modbus transaction
     # time out even though the port opens successfully.
-    port = "/dev/cu.usbserial-140"
+    port = "/dev/cu.usbserial-3140"
     inputs_id = 1
     ouputs_id = 2
     baudrate = 115200
@@ -81,4 +81,4 @@
     port = "/dev/tty.usbserial-00007902"
 
 [iface.rs232]
-    port = "/dev/tty.usbserial-21230"
+    port = "/dev/tty.usbserial-DN0536AY"

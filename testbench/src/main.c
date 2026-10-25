@@ -1,3 +1,4 @@
+#include <libgen.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -37,6 +38,44 @@ static const char* make_absolute(char* buf, size_t cap, const char* path)
     return buf;
 }
 
+/* mg_http_serve_dir() has a surprising quirk: for the "/" URI it unconditionally
+ * treats the request as hitting a directory (never calls stat() on root_dir itself),
+ * so a root_dir that doesn't actually exist silently serves an empty "Index of /"
+ * listing instead of failing loudly. The default --web-root ("web") is relative to
+ * the CWD, which only happens to contain a "web/" directory when launched from
+ * testbench/ -- the far more common `cd build && ./testbench` leaves CWD at
+ * testbench/build/, which has no "web/" of its own (it lives one level up).
+ *
+ * So: only when --web-root was left at its default, if cwd-relative "web" doesn't
+ * resolve, fall back to resolving it relative to the executable's own location
+ * (argv0) instead -- "<exe_dir>/../web" covers both common invocations. */
+static const char* resolve_web_root(const char* argv0, const char* web_root, bool is_default, char* buf, size_t cap)
+{
+    if (realpath(web_root, buf) != NULL)
+        return buf;
+    if (!is_default)
+        return web_root; /* explicit --web-root that doesn't exist: let it fail loudly downstream */
+
+    if (strchr(argv0, '/') != NULL)
+    {
+        char tmp[PATH_MAX];
+        const char* exe_in = argv0[0] == '/' ? argv0 : make_absolute(tmp, sizeof(tmp), argv0);
+        char        exe_abs[PATH_MAX];
+        if (exe_in && realpath(exe_in, exe_abs) != NULL)
+        {
+            char dirbuf[PATH_MAX];
+            strncpy(dirbuf, exe_abs, sizeof(dirbuf) - 1);
+            dirbuf[sizeof(dirbuf) - 1] = '\0';
+
+            char candidate[PATH_MAX];
+            snprintf(candidate, sizeof(candidate), "%s/../web", dirname(dirbuf));
+            if (realpath(candidate, buf) != NULL)
+                return buf;
+        }
+    }
+    return web_root;
+}
+
 static void print_usage(const char* argv0)
 {
     fprintf(stderr,
@@ -63,6 +102,7 @@ int main(int argc, char** argv)
     const char* pidfile_path = "/tmp/testbench.pid";
     const char* log_file_path = NULL;
     int         do_list = 0, do_read = 0, do_iface = 0, do_status = 0, no_http = 0, daemonize = 0;
+    bool        web_root_is_default = true;
 
     for (int i = 1; i < argc; i++)
     {
@@ -81,7 +121,10 @@ int main(int argc, char** argv)
         else if (strcmp(argv[i], "--http-addr") == 0 && i + 1 < argc)
             http_addr = argv[++i];
         else if (strcmp(argv[i], "--web-root") == 0 && i + 1 < argc)
-            web_root = argv[++i];
+        {
+            web_root           = argv[++i];
+            web_root_is_default = false;
+        }
         else if (strcmp(argv[i], "--no-http") == 0)
             no_http = 1;
         else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--daemonize") == 0)
@@ -220,8 +263,7 @@ int main(int argc, char** argv)
      * resolve against "/" afterwards. web_root in particular needs this even with no
      * explicit flag: its default ("web") is relative. */
     char web_root_abs[PATH_MAX];
-    if (realpath(web_root, web_root_abs) != NULL)
-        web_root = web_root_abs;
+    web_root = resolve_web_root(argv[0], web_root, web_root_is_default, web_root_abs, sizeof(web_root_abs));
     char pidfile_abs[PATH_MAX];
     pidfile_path = make_absolute(pidfile_abs, sizeof(pidfile_abs), pidfile_path);
     char log_file_abs[PATH_MAX];
@@ -272,6 +314,15 @@ int main(int argc, char** argv)
     TbHttp* http = NULL;
     if (!no_http)
     {
+        char index_check[PATH_MAX];
+        snprintf(index_check, sizeof(index_check), "%s/index.html", web_root);
+        if (access(index_check, F_OK) != 0)
+            fprintf(stderr,
+                    "testbench: warning: no index.html under --web-root '%s' -- the control panel will "
+                    "silently show an empty directory listing instead of an error (a mongoose quirk); "
+                    "pass --web-root explicitly if this isn't where web/ actually is\n",
+                    web_root);
+
         http = tb_http_start(&cfg, &st, web_root, http_addr);
         if (http)
             fprintf(stderr, "testbench: http: serving %s on %s\n", web_root, http_addr);

@@ -57,7 +57,7 @@
       ifaceNodes[name] = badge;
     }
     ifaceNodes[name].classList.toggle("found", !!found);
-    ifaceNodes[name].title = found ? "обнаружен" : "не обнаружен";
+    ifaceNodes[name].title = found ? "detected" : "not detected";
   }
 
   async function setOutput(label, value) {
@@ -89,13 +89,13 @@
       }
 
       statusDot.className = "dot ok";
-      statusText.textContent = data.status.input_valid ? "опрос идёт" : "нет связи со входами";
+      statusText.textContent = data.status.input_valid ? "polling" : "inputs unreachable";
       footerStats.textContent =
         `polls=${data.status.poll_count} errors=${data.status.poll_errors} ` +
         `uptime=${Math.round(data.status.uptime_ms / 1000)}s`;
     } catch (e) {
       statusDot.className = "dot err";
-      statusText.textContent = "демон недоступен";
+      statusText.textContent = "daemon unreachable";
     }
   }
 
