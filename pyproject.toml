@@ -8,6 +8,11 @@ dependencies = [
     "pytest>=8.0",
 ]
 
+[project.optional-dependencies]
+# Only needed by testbench/client/python/testbench_client.py (talks to an already-running
+# testbench daemon over its low-latency NNG IPC API) -- not part of the core HIL test deps.
+ipc = ["pynng>=0.8"]
+
 [tool.pytest.ini_options]
 # Anchors rootdir at the repo root so the root conftest.py (HIL fixtures) is
 # always loaded; norecursedirs keeps plain `pytest` out of thirdparty/builds.

@@ -9,7 +9,10 @@
 
 
 [io.connection]
-    port = "/dev/tty.usbserial-21140"
+    # macOS: use /dev/cu.* here, not /dev/tty.* -- the tty.* node waits on carrier-detect
+    # semantics that this adapter never satisfies, which makes every Modbus transaction
+    # time out even though the port opens successfully.
+    port = "/dev/cu.usbserial-140"
     inputs_id = 1
     ouputs_id = 2
     baudrate = 115200

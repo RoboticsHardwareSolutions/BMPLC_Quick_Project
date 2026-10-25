@@ -6,3 +6,4 @@ tests/cmake-*
 /build
 /.vscode/settings.json
 /.cache
+/testbench/build

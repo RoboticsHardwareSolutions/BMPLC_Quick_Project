@@ -52,3 +52,12 @@
 [submodule "thirdparty/runit"]
 	path = thirdparty/runit
 	url = https://github.com/RoboticsHardwareSolutions/runit.git
+[submodule "thirdparty/tomlc17"]
+	path = thirdparty/tomlc17
+	url = https://github.com/cktan/tomlc17.git
+[submodule "thirdparty/libmodbus"]
+	path = thirdparty/libmodbus
+	url = https://github.com/stephane/libmodbus.git
+[submodule "thirdparty/nng"]
+	path = thirdparty/nng
+	url = https://github.com/nanomsg/nng.git

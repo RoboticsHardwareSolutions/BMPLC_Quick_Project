@@ -1,0 +1,324 @@
+#include <limits.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "cli.h"
+#include "config.h"
+#include "daemonize.h"
+#include "http_server.h"
+#include "ipc_server.h"
+#include "modbus_io.h"
+#include "state.h"
+#include "testbench_client.h"
+#include "testbench_proto.h"
+
+static volatile sig_atomic_t g_stop = 0;
+static void                  on_signal(int sig)
+{
+    (void) sig;
+    g_stop = 1;
+}
+
+/* realpath() requires the target to already exist, which a pidfile/log file usually
+ * doesn't yet -- just prefix the cwd manually instead. `buf` must be PATH_MAX. */
+static const char* make_absolute(char* buf, size_t cap, const char* path)
+{
+    if (!path || path[0] == '/')
+        return path;
+    if (getcwd(buf, cap) == NULL)
+        return path;
+    size_t n = strlen(buf);
+    snprintf(buf + n, cap - n, "/%s", path);
+    return buf;
+}
+
+static void print_usage(const char* argv0)
+{
+    fprintf(stderr,
+            "usage: %s [--config PATH] [--list | --read | --write LABEL=0|1[,...] | --iface | --status]\n"
+            "       %s [--config PATH] [--http-addr URL] [--web-root DIR] [--no-http]\n"
+            "          [-d|--daemonize] [--pidfile PATH] [--log-file PATH]\n"
+            "          (no action flag: run as the polling daemon -- foreground by default,\n"
+            "           or detached in the background with -d/--daemonize)\n"
+            "\n"
+            "--read/--write/--status route through an already-running daemon's IPC socket\n"
+            "when one is listening on %s; otherwise --read/--write fall back to a direct,\n"
+            "one-shot Modbus session (--status requires a running daemon).\n",
+            argv0,
+            argv0,
+            TB_IPC_DEFAULT_URL);
+}
+
+int main(int argc, char** argv)
+{
+    const char* config_path = "testbench.toml";
+    const char* write_arg    = NULL;
+    const char* http_addr    = "http://0.0.0.0:8080";
+    const char* web_root     = "web";
+    const char* pidfile_path = "/tmp/testbench.pid";
+    const char* log_file_path = NULL;
+    int         do_list = 0, do_read = 0, do_iface = 0, do_status = 0, no_http = 0, daemonize = 0;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--config") == 0 && i + 1 < argc)
+            config_path = argv[++i];
+        else if (strcmp(argv[i], "--list") == 0)
+            do_list = 1;
+        else if (strcmp(argv[i], "--read") == 0)
+            do_read = 1;
+        else if (strcmp(argv[i], "--iface") == 0)
+            do_iface = 1;
+        else if (strcmp(argv[i], "--status") == 0)
+            do_status = 1;
+        else if (strcmp(argv[i], "--write") == 0 && i + 1 < argc)
+            write_arg = argv[++i];
+        else if (strcmp(argv[i], "--http-addr") == 0 && i + 1 < argc)
+            http_addr = argv[++i];
+        else if (strcmp(argv[i], "--web-root") == 0 && i + 1 < argc)
+            web_root = argv[++i];
+        else if (strcmp(argv[i], "--no-http") == 0)
+            no_http = 1;
+        else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--daemonize") == 0)
+            daemonize = 1;
+        else if (strcmp(argv[i], "--pidfile") == 0 && i + 1 < argc)
+            pidfile_path = argv[++i];
+        else if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc)
+            log_file_path = argv[++i];
+        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+        {
+            print_usage(argv[0]);
+            return 0;
+        }
+        else
+        {
+            fprintf(stderr, "testbench: unknown argument '%s'\n", argv[i]);
+            print_usage(argv[0]);
+            return 2;
+        }
+    }
+
+    TbConfig cfg;
+    char     errbuf[256];
+    if (tb_config_load(config_path, &cfg, errbuf, sizeof(errbuf)) != 0)
+    {
+        fprintf(stderr, "testbench: failed to load config '%s': %s\n", config_path, errbuf);
+        return 1;
+    }
+
+    /* --list/--iface never touch the serial port or the daemon: --list only reads
+     * config, --iface only stat()s device paths. */
+    if (do_list)
+        return tb_cli_list(&cfg);
+    if (do_iface)
+        return tb_cli_iface(&cfg);
+
+    if (do_read || write_arg || do_status)
+    {
+        /* If a daemon is already running, route through its IPC socket instead of
+         * opening the serial port ourselves -- a one-shot direct session would fight
+         * the daemon's poll thread for the same port. */
+        TbClient* client = tb_client_connect(NULL);
+        if (client && !tb_client_ping(client))
+        {
+            tb_client_close(client);
+            client = NULL;
+        }
+
+        int status = 0;
+
+        if (do_status)
+        {
+            if (!client)
+            {
+                fprintf(stderr, "testbench: --status requires a running daemon (none found on %s)\n", TB_IPC_DEFAULT_URL);
+                status = 1;
+            }
+            else
+            {
+                uint64_t uptime_ms, poll_count, poll_errors;
+                if (tb_client_get_status(client, &uptime_ms, &poll_count, &poll_errors))
+                    printf("uptime=%llums poll_count=%llu poll_errors=%llu\n",
+                           (unsigned long long) uptime_ms,
+                           (unsigned long long) poll_count,
+                           (unsigned long long) poll_errors);
+                else
+                {
+                    fprintf(stderr, "testbench: status query failed\n");
+                    status = 1;
+                }
+            }
+        }
+        else if (do_read)
+        {
+            if (client)
+            {
+                uint32_t bits  = 0;
+                uint64_t ts_ms = 0;
+                bool     valid = false;
+                if (tb_client_get_inputs(client, &bits, &ts_ms, &valid))
+                {
+                    for (int i = 0; i < cfg.input_label_count; i++)
+                    {
+                        int idx = cfg.input_labels[i].index;
+                        printf("  %-20s : %s\n", cfg.input_labels[i].name, ((bits >> idx) & 1u) ? "ON" : "off");
+                    }
+                }
+                else
+                {
+                    fprintf(stderr, "testbench: ipc read failed\n");
+                    status = 1;
+                }
+            }
+            else
+            {
+                status = tb_cli_read(&cfg);
+            }
+        }
+        else /* write_arg */
+        {
+            if (client)
+            {
+                uint32_t mask = 0, value = 0;
+                if (tb_parse_write_assignments(&cfg, write_arg, &mask, &value) != 0)
+                {
+                    status = 1;
+                }
+                else if (!tb_client_set_coils_mask(client, mask, value))
+                {
+                    fprintf(stderr, "testbench: ipc write failed\n");
+                    status = 1;
+                }
+                else
+                {
+                    for (int bit = 0; bit < 32; bit++)
+                        if (mask & (1u << bit))
+                        {
+                            int         addr = cfg.output_min_addr + bit;
+                            const char* name = tb_config_output_label(&cfg, addr);
+                            printf("  %-20s -> %s\n", name ? name : "?", (value & (1u << bit)) ? "ON" : "off");
+                        }
+                }
+            }
+            else
+            {
+                status = tb_cli_write(&cfg, write_arg);
+            }
+        }
+
+        if (client)
+            tb_client_close(client);
+        return status;
+    }
+
+    /* Resolve any relative paths before tb_daemonize()'s chdir("/") -- otherwise they'd
+     * resolve against "/" afterwards. web_root in particular needs this even with no
+     * explicit flag: its default ("web") is relative. */
+    char web_root_abs[PATH_MAX];
+    if (realpath(web_root, web_root_abs) != NULL)
+        web_root = web_root_abs;
+    char pidfile_abs[PATH_MAX];
+    pidfile_path = make_absolute(pidfile_abs, sizeof(pidfile_abs), pidfile_path);
+    char log_file_abs[PATH_MAX];
+    if (log_file_path)
+        log_file_path = make_absolute(log_file_abs, sizeof(log_file_abs), log_file_path);
+
+    if (daemonize)
+    {
+        if (!log_file_path || log_file_path[0] == '\0')
+            log_file_path = "/tmp/testbench.log";
+        /* Must happen before any threads exist or FDs (serial port, sockets) are
+         * opened -- fork() only carries the calling thread into the child. */
+        if (tb_daemonize(log_file_path) != 0)
+        {
+            fprintf(stderr, "testbench: daemonize failed\n");
+            return 1;
+        }
+        tb_write_pidfile(pidfile_path);
+    }
+
+    fprintf(stderr,
+            "testbench: port=%s baud=%d inputs_id=%d outputs_id=%d input_regs=%d "
+            "outputs=[%d..%d] (%d labels) poll=%dms\n",
+            cfg.port,
+            cfg.baudrate,
+            cfg.inputs_id,
+            cfg.outputs_id,
+            cfg.input_count,
+            cfg.output_min_addr,
+            cfg.output_min_addr + cfg.output_span - 1,
+            cfg.output_label_count,
+            cfg.poll_interval_ms);
+
+    TbState st;
+    tb_state_init(&st, cfg.output_span);
+
+    char      mberr[256];
+    TbModbus* m = tb_modbus_open(&cfg, mberr, sizeof(mberr));
+    if (!m)
+    {
+        fprintf(stderr, "testbench: %s\n", mberr);
+        return 1;
+    }
+
+    if (tb_modbus_seed_outputs(m, &cfg, &st) != 0)
+        fprintf(stderr, "testbench: warning: could not seed output state from hardware, defaulting to all-off\n");
+
+    TbHttp* http = NULL;
+    if (!no_http)
+    {
+        http = tb_http_start(&cfg, &st, web_root, http_addr);
+        if (http)
+            fprintf(stderr, "testbench: http: serving %s on %s\n", web_root, http_addr);
+        else
+            fprintf(stderr, "testbench: http: failed to start (continuing without it)\n");
+    }
+
+    TbIpc* ipc = tb_ipc_start(&cfg, &st, NULL);
+    if (ipc)
+        fprintf(stderr, "testbench: ipc: listening on %s\n", TB_IPC_DEFAULT_URL);
+    else
+        fprintf(stderr, "testbench: ipc: failed to start (continuing without it)\n");
+
+    signal(SIGINT, on_signal);
+    signal(SIGTERM, on_signal);
+
+    fprintf(stderr, "testbench: polling (Ctrl+C to stop)\n");
+    while (!g_stop)
+    {
+        int rc = tb_modbus_cycle(m, &cfg, &st);
+
+        if (!daemonize)
+        {
+            pthread_mutex_lock(&st.mutex);
+            fprintf(stdout,
+                    "\rinputs=0x%08x outputs=%d..%d polls=%llu errors=%llu %-5s",
+                    st.input_bits,
+                    cfg.output_min_addr,
+                    cfg.output_min_addr + cfg.output_span - 1,
+                    (unsigned long long) st.poll_count,
+                    (unsigned long long) st.poll_errors,
+                    rc == 0 ? "ok" : "ERR");
+            fflush(stdout);
+            pthread_mutex_unlock(&st.mutex);
+        }
+
+        usleep((useconds_t) cfg.poll_interval_ms * 1000);
+    }
+
+    fprintf(stderr, "\ntestbench: shutting down\n");
+    if (ipc)
+        tb_ipc_stop(ipc);
+    if (http)
+        tb_http_stop(http);
+    tb_modbus_close(m);
+    tb_state_destroy(&st);
+    if (daemonize)
+        tb_remove_pidfile(pidfile_path);
+    return 0;
+}
