@@ -43,7 +43,15 @@ _SEND_TIMEOUT_MS = 1000
 
 
 class TestbenchIpcError(RuntimeError):
-    """Raised when the daemon is unreachable, or returns a non-OK status."""
+    """Raised when the daemon is unreachable, or returns a non-OK status.
+
+    A non-OK status covers two distinct situations: get_inputs()/get_outputs() raise it
+    when the daemon is reachable but the corresponding direction's last Modbus poll
+    didn't actually reach the bus (no trustworthy data to hand back), and
+    set_coils_mask() raises it when a write would never reach the hardware right now
+    (rejected outright rather than silently queued). ping() and get_status() are NOT
+    gated on Modbus health -- they stay available so callers can diagnose *why* the
+    others are failing."""
 
 
 class TestbenchClient:
@@ -84,19 +92,31 @@ class TestbenchClient:
 
     def get_inputs(self) -> dict:
         """Returns {"bits": int, "ts_ms": int, "valid": bool}. bit i = input bit index i
-        (absolute, matches io.map.inputs.labels bit indices directly)."""
+        (absolute, matches io.map.inputs.labels bit indices directly).
+
+        Raises TestbenchIpcError instead of returning a stale snapshot if the daemon's
+        Modbus input poll isn't currently valid -- "valid" is always True when this
+        returns rather than raising."""
         bits, ts_ms, valid = _INPUTS_RESP.unpack(self._call(_OP_GET_INPUTS))
         return {"bits": bits, "ts_ms": ts_ms, "valid": bool(valid)}
 
     def get_outputs(self) -> dict:
         """Returns {"bits": int, "min_addr": int, "span": int}. bit i of `bits` = coil
-        (min_addr + i)."""
+        (min_addr + i).
+
+        Raises TestbenchIpcError if the daemon's last coil write didn't actually reach
+        the bus -- the in-memory desired state wouldn't be a trustworthy snapshot of
+        hardware reality right now."""
         bits, min_addr, span = _OUTPUTS_RESP.unpack(self._call(_OP_GET_OUTPUTS))
         return {"bits": bits, "min_addr": min_addr, "span": span}
 
     def set_coils_mask(self, mask: int, value: int) -> None:
         """Sets only the coils with their bit set in `mask` to the corresponding bit of
-        `value`; bit i <-> coil (output_min_addr + i), per TestbenchLabels.coil_bit()."""
+        `value`; bit i <-> coil (output_min_addr + i), per TestbenchLabels.coil_bit().
+
+        Raises TestbenchIpcError, without applying anything, if the daemon's Modbus
+        output link is currently down -- the write would never reach the hardware, so
+        it's rejected outright rather than silently queued."""
         self._call(_OP_SET_COILS_MASK, _SET_COILS_REQ.pack(mask, value))
 
     def get_status(self) -> dict:

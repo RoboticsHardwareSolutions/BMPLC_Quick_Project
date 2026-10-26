@@ -38,6 +38,16 @@ static double get_dbl(toml_datum_t table, const char* key, double def)
     return def;
 }
 
+/* 0 means "key absent" -- never a valid IOKit locationID (0 is the host controller
+ * itself in the registry, not a leaf USB-serial device). */
+static uint32_t get_uint32(toml_datum_t table, const char* key)
+{
+    toml_datum_t d = toml_get(table, key);
+    if (d.type == TOML_INT64)
+        return (uint32_t) d.u.int64;
+    return 0;
+}
+
 /* `labels_table` is a TOML table whose keys are decimal-string indices/addresses and
  * whose values are label name strings -- the shared shape of both
  * io.map.inputs.labels and io.map.outputs.labels. */
@@ -77,7 +87,7 @@ int tb_config_load(const char* path, TbConfig* cfg, char* errbuf, size_t errbuf_
         toml_free(r);
         return -1;
     }
-    copy_tstr(toml_get(conn, "port"), cfg->port, sizeof(cfg->port));
+    cfg->usb_location = get_uint32(conn, "usb_location");
     cfg->inputs_id  = (int) get_int(conn, "inputs_id", 1);
     /* "ouputs_id" (missing 't') is the key actually used in testbench.toml and io.py --
      * kept verbatim here so this daemon reads the same config file unmodified. */
@@ -93,7 +103,8 @@ int tb_config_load(const char* path, TbConfig* cfg, char* errbuf, size_t errbuf_
     if (cfg->input_count > TB_MAX_INPUT_REGS)
     {
         fprintf(stderr,
-                "testbench: warning: io.map.inputs.count=%d exceeds compiled-in max %d, clamping\n",
+                "testbench: warning: io.map.inputs.count=%d exceeds the 32-bit input mask's "
+                "capacity (%d registers max), clamping\n",
                 cfg->input_count,
                 TB_MAX_INPUT_REGS);
         cfg->input_count = TB_MAX_INPUT_REGS;
@@ -140,7 +151,7 @@ int tb_config_load(const char* path, TbConfig* cfg, char* errbuf, size_t errbuf_
                 n = sizeof(slot->name) - 1;
             memcpy(slot->name, name, n);
             slot->name[n] = '\0';
-            copy_tstr(toml_get(sub, "port"), slot->port, sizeof(slot->port));
+            slot->usb_location = get_uint32(sub, "usb_location");
         }
     }
 
@@ -170,4 +181,14 @@ int tb_config_find_output_addr(const TbConfig* cfg, const char* label)
         if (strcmp(cfg->output_labels[i].name, label) == 0)
             return cfg->output_labels[i].index;
     return -1;
+}
+
+uint32_t tb_regs_to_input_bits(const uint16_t* regs, int n)
+{
+    if (n > TB_MAX_INPUT_REGS)
+        n = TB_MAX_INPUT_REGS;
+    uint32_t bits = 0;
+    for (int i = 0; i < n; i++)
+        bits |= ((uint32_t) regs[i]) << (16 * i);
+    return bits;
 }

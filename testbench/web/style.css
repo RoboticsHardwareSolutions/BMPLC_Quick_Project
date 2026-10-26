@@ -32,6 +32,9 @@ body {
   color: var(--text-on-dark);
   padding: 18px 28px;
   border-bottom: 4px solid var(--header-deep);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .brand {
@@ -45,8 +48,8 @@ body {
 }
 
 .brand-icon {
-  color: var(--accent);
-  font-size: 1.1rem;
+  height: 1.4rem;
+  width: auto;
 }
 
 .status {

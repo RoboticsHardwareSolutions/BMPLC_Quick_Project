@@ -88,7 +88,7 @@
         setIface(name, found);
       }
 
-      statusDot.className = "dot ok";
+      statusDot.className = data.status.input_valid ? "dot ok" : "dot err";
       statusText.textContent = data.status.input_valid ? "polling" : "inputs unreachable";
       footerStats.textContent =
         `polls=${data.status.poll_count} errors=${data.status.poll_errors} ` +

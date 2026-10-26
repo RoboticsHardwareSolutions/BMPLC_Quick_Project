@@ -50,6 +50,12 @@ static size_t handle_request(TbIpc* ipc, const uint8_t* req, size_t req_len, uin
             body.valid = ipc->st->input_valid ? 1 : 0;
             pthread_mutex_unlock(&ipc->st->mutex);
 
+            /* The Modbus input poll isn't currently producing valid data (bus error,
+             * device unplugged, etc) -- report the call itself as failed rather than
+             * hand back a snapshot that's silently stale. */
+            if (!body.valid)
+                break;
+
             rh.status = TB_STATUS_OK;
             memcpy(resp, &rh, sizeof(rh));
             memcpy(resp + off, &body, sizeof(body));
@@ -57,14 +63,22 @@ static size_t handle_request(TbIpc* ipc, const uint8_t* req, size_t req_len, uin
         }
         case TB_OP_GET_OUTPUTS:
         {
+            bool          output_valid;
             TbOutputsResp body = {0};
             pthread_mutex_lock(&ipc->st->mutex);
+            output_valid = ipc->st->output_valid;
             for (int i = 0; i < ipc->cfg->output_span && i < 32; i++)
                 if (ipc->st->output_bits[i])
                     body.bits |= (1u << i);
             pthread_mutex_unlock(&ipc->st->mutex);
             body.min_addr = ipc->cfg->output_min_addr;
             body.span     = ipc->cfg->output_span;
+
+            /* Same reasoning as TB_OP_GET_INPUTS -- the last coil write didn't actually
+             * reach the bus, so the in-memory desired state isn't a trustworthy snapshot
+             * of hardware reality right now. */
+            if (!output_valid)
+                break;
 
             rh.status = TB_STATUS_OK;
             memcpy(resp, &rh, sizeof(rh));
@@ -79,10 +93,17 @@ static size_t handle_request(TbIpc* ipc, const uint8_t* req, size_t req_len, uin
             memcpy(&in, payload, sizeof(in));
 
             pthread_mutex_lock(&ipc->st->mutex);
-            for (int i = 0; i < ipc->cfg->output_span && i < 32; i++)
-                if (in.mask & (1u << i))
-                    ipc->st->output_bits[i] = (uint8_t) ((in.value >> i) & 1u);
+            bool output_valid = ipc->st->output_valid;
+            if (output_valid)
+                for (int i = 0; i < ipc->cfg->output_span && i < 32; i++)
+                    if (in.mask & (1u << i))
+                        ipc->st->output_bits[i] = (uint8_t) ((in.value >> i) & 1u);
             pthread_mutex_unlock(&ipc->st->mutex);
+
+            /* Reject outright rather than silently queue the write -- a caller told
+             * "false" should be able to trust that nothing happened. */
+            if (!output_valid)
+                break;
 
             rh.status = TB_STATUS_OK;
             memcpy(resp, &rh, sizeof(rh));

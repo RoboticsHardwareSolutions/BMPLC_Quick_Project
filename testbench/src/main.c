@@ -12,11 +12,21 @@
 #include "config.h"
 #include "daemonize.h"
 #include "http_server.h"
+#include "iface_scan.h"
 #include "ipc_server.h"
 #include "modbus_io.h"
 #include "state.h"
 #include "testbench_client.h"
 #include "testbench_proto.h"
+
+/* Number of consecutive failed poll cycles before the daemon closes and reopens the
+ * serial connection, to recover from a dropped/replugged serial device. */
+#define TB_RECONNECT_AFTER_ERRORS 5
+
+/* How often to re-run the IOKit iface presence scan -- physical USB topology only
+ * changes on cable replug, so this is decoupled from poll_interval_ms (which can be
+ * much faster) instead of rescanning every poll cycle or every HTTP request. */
+#define TB_IFACE_REFRESH_MS 2000
 
 static volatile sig_atomic_t g_stop = 0;
 static void                  on_signal(int sig)
@@ -285,9 +295,9 @@ int main(int argc, char** argv)
     }
 
     fprintf(stderr,
-            "testbench: port=%s baud=%d inputs_id=%d outputs_id=%d input_regs=%d "
+            "testbench: usb_location=0x%x baud=%d inputs_id=%d outputs_id=%d input_regs=%d "
             "outputs=[%d..%d] (%d labels) poll=%dms\n",
-            cfg.port,
+            cfg.usb_location,
             cfg.baudrate,
             cfg.inputs_id,
             cfg.outputs_id,
@@ -340,21 +350,82 @@ int main(int argc, char** argv)
     signal(SIGTERM, on_signal);
 
     fprintf(stderr, "testbench: polling (Ctrl+C to stop)\n");
+    /* The in-place \r status refresh below only looks right on a real terminal, which
+     * actually interprets \r as "return to column 0 of this row" -- piped/captured
+     * output (a log file, this daemon launched from a non-interactive wrapper) has no
+     * such cursor, so an un-terminated \r line there just sits open for whatever the
+     * next write happens to be (even from the stderr stream) to run on right after it. */
+    bool     stdout_is_tty = !daemonize && isatty(fileno(stdout));
+    int      consecutive_errors = 0;
+    uint64_t iface_next_ts      = 0;
     while (!g_stop)
     {
         int rc = tb_modbus_cycle(m, &cfg, &st);
+
+        uint64_t now = tb_now_ms();
+        if (now >= iface_next_ts)
+        {
+            bool present[TB_MAX_IFACES];
+            for (int i = 0; i < cfg.iface_count; i++)
+                present[i] = tb_iface_detect(&cfg.iface[i]);
+
+            pthread_mutex_lock(&st.mutex);
+            memcpy(st.iface_present, present, sizeof(bool) * (size_t) cfg.iface_count);
+            st.iface_ts_ms = now;
+            pthread_mutex_unlock(&st.mutex);
+
+            iface_next_ts = now + TB_IFACE_REFRESH_MS;
+        }
+
+        /* A dropped serial device (e.g. a USB-serial adapter unplugged) fails every
+         * cycle forever on the same stale fd -- it never recovers on its own even once
+         * the port comes back, so force a close+reopen after a run of failures. */
+        if (rc != 0)
+        {
+            consecutive_errors++;
+            if (consecutive_errors >= TB_RECONNECT_AFTER_ERRORS)
+            {
+                /* Deliberately printed to stdout, the same stream as the status line
+                 * below, not stderr: two separate streams give no ordering guarantee
+                 * once something downstream (a terminal multiplexer, a log relay, this
+                 * command's own output capture) reads both -- bytes from each can be
+                 * interleaved out of the order this process actually wrote them in,
+                 * which is what caused these messages to visually run into/swap places
+                 * with the status line. One stream keeps them in true write order.
+                 * Leading "\n" (tty only): the status line below has no trailing
+                 * newline there (it overwrites itself in place), so without this these
+                 * messages would run on right after it instead of starting fresh. */
+                fprintf(stdout,
+                        "%stestbench: %d consecutive poll errors, reconnecting (usb_location=0x%x)...\n",
+                        stdout_is_tty ? "\n" : "",
+                        consecutive_errors,
+                        cfg.usb_location);
+                if (tb_modbus_reconnect(m, &cfg, mberr, sizeof(mberr)) == 0)
+                    fprintf(stdout, "testbench: reconnected (usb_location=0x%x)\n", cfg.usb_location);
+                else
+                    fprintf(stdout, "testbench: reconnect failed: %s\n", mberr);
+                fflush(stdout);
+                consecutive_errors = 0;
+            }
+        }
+        else
+        {
+            consecutive_errors = 0;
+        }
 
         if (!daemonize)
         {
             pthread_mutex_lock(&st.mutex);
             fprintf(stdout,
-                    "\rinputs=0x%08x outputs=%d..%d polls=%llu errors=%llu %-5s",
+                    "%sinputs=0x%08x outputs=%d..%d polls=%llu errors=%llu %-5s%s",
+                    stdout_is_tty ? "\r" : "",
                     st.input_bits,
                     cfg.output_min_addr,
                     cfg.output_min_addr + cfg.output_span - 1,
                     (unsigned long long) st.poll_count,
                     (unsigned long long) st.poll_errors,
-                    rc == 0 ? "ok" : "ERR");
+                    rc == 0 ? "ok" : "ERR",
+                    stdout_is_tty ? "" : "\n");
             fflush(stdout);
             pthread_mutex_unlock(&st.mutex);
         }

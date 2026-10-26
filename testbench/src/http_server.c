@@ -7,8 +7,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iface_scan.h"
 #include "mongoose.h"
+
+/* Worst-case body size for build_state_json(): TB_MAX_LABELS (48) input + 48 output
+ * labels, each up to a 31-char name (TbLabel.name is char[32]) rendered as
+ * `"<31 chars>":false,` (~40 bytes), plus TB_MAX_IFACES (8) iface entries up to a
+ * 15-char name (~24 bytes), plus the fixed-shape status object and JSON punctuation
+ * (~300 bytes): (48+48)*40 + 8*24 + 300 ~= 4332 bytes. Rounded up with headroom. */
+#define TB_STATE_JSON_CAP 8192
 
 struct TbHttp
 {
@@ -34,17 +40,19 @@ static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t
     uint64_t in_ts    = st->input_ts_ms;
     uint8_t  out_bits[TB_MAX_OUTPUT_SPAN];
     memcpy(out_bits, st->output_bits, (size_t) cfg->output_span);
+    bool iface_present[TB_MAX_IFACES];
+    memcpy(iface_present, st->iface_present, sizeof(bool) * (size_t) cfg->iface_count);
     uint64_t polls = st->poll_count, errs = st->poll_errors, start = st->start_ts_ms;
     pthread_mutex_unlock(&st->mutex);
 
     size_t off = 0;
-    off += (size_t) snprintf(out + off, cap - off, "{\"inputs\":{");
+    off += (size_t) snprintf(out + off, off < cap ? cap - off : 0, "{\"inputs\":{");
     for (int i = 0; i < cfg->input_label_count; i++)
     {
         int bit = (int) ((in_bits >> cfg->input_labels[i].index) & 1u);
         append_json_str_bool_map(out, cap, &off, cfg->input_labels[i].name, bit != 0, i == 0);
     }
-    off += (size_t) snprintf(out + off, cap - off, "},\"outputs\":{");
+    off += (size_t) snprintf(out + off, off < cap ? cap - off : 0, "},\"outputs\":{");
     for (int i = 0; i < cfg->output_label_count; i++)
     {
         int addr = cfg->output_labels[i].index;
@@ -53,15 +61,12 @@ static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t
             bit = out_bits[addr - cfg->output_min_addr];
         append_json_str_bool_map(out, cap, &off, cfg->output_labels[i].name, bit != 0, i == 0);
     }
-    off += (size_t) snprintf(out + off, cap - off, "},\"iface\":{");
+    off += (size_t) snprintf(out + off, off < cap ? cap - off : 0, "},\"iface\":{");
     for (int i = 0; i < cfg->iface_count; i++)
-    {
-        bool found = tb_iface_detect(cfg->iface[i].port);
-        append_json_str_bool_map(out, cap, &off, cfg->iface[i].name, found, i == 0);
-    }
+        append_json_str_bool_map(out, cap, &off, cfg->iface[i].name, iface_present[i], i == 0);
     uint64_t now = tb_now_ms();
     off += (size_t) snprintf(out + off,
-                              cap - off,
+                              off < cap ? cap - off : 0,
                               "},\"status\":{\"input_valid\":%s,\"input_age_ms\":%llu,"
                               "\"poll_count\":%llu,\"poll_errors\":%llu,\"uptime_ms\":%llu}}",
                               in_valid ? "true" : "false",
@@ -69,6 +74,13 @@ static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t
                               (unsigned long long) polls,
                               (unsigned long long) errs,
                               (unsigned long long) (now - start));
+
+    if (off >= cap)
+        fprintf(stderr,
+                "testbench: http: /api/state JSON truncated (%zu bytes needed, %zu available) -- "
+                "too many labels/ifaces configured for TB_STATE_JSON_CAP\n",
+                off,
+                cap);
 }
 
 static void handle_post_outputs(TbHttp* http, struct mg_http_message* hm, struct mg_connection* c)
@@ -91,7 +103,7 @@ static void handle_post_outputs(TbHttp* http, struct mg_http_message* hm, struct
     }
     pthread_mutex_unlock(&st->mutex);
 
-    char buf[4096];
+    char buf[TB_STATE_JSON_CAP];
     build_state_json(cfg, st, buf, sizeof(buf));
     mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s", buf);
 }
@@ -105,7 +117,7 @@ static void ev_handler(struct mg_connection* c, int ev, void* ev_data)
 
     if (mg_match(hm->uri, mg_str("/api/state"), NULL))
     {
-        char buf[4096];
+        char buf[TB_STATE_JSON_CAP];
         build_state_json(http->cfg, http->st, buf, sizeof(buf));
         mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s", buf);
     }

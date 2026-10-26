@@ -1,9 +1,13 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define TB_MAX_LABELS 48
-#define TB_MAX_INPUT_REGS 8
+/* TbState.input_bits and the IPC wire protocol are a 32-bit mask, so at most 2
+ * 16-bit holding registers can ever be packed into it -- this is not a tunable
+ * buffer-size knob, raising it would silently overflow that 32-bit mask. */
+#define TB_MAX_INPUT_REGS 2
 #define TB_MAX_OUTPUT_SPAN 64
 #define TB_MAX_IFACES 8
 
@@ -16,14 +20,18 @@ typedef struct
 typedef struct
 {
     char name[16];
-    char port[256];
+
+    /* IOKit USB locationID (physical hub port) -- resolved to the adapter's current
+     * /dev path at use time, since on macOS /dev/cu.usbserial-* names for cheap
+     * USB-serial clones are not stable across reboots (see usb_resolve.h). */
+    uint32_t usb_location;
 } TbIface;
 
 typedef struct
 {
     /* [io.connection] */
-    char   port[256];
-    int    inputs_id;
+    uint32_t usb_location; /* see TbIface.usb_location */
+    int      inputs_id;
     int    outputs_id;
     int    baudrate;
     double timeout_s;
@@ -58,3 +66,8 @@ int tb_config_load(const char* path, TbConfig* cfg, char* errbuf, size_t errbuf_
 const char* tb_config_input_label(const TbConfig* cfg, int bit_index);
 const char* tb_config_output_label(const TbConfig* cfg, int addr);
 int         tb_config_find_output_addr(const TbConfig* cfg, const char* label);
+
+/* Packs up to TB_MAX_INPUT_REGS 16-bit holding registers (regs[0] = low 16 bits) into
+ * the 32-bit mask used by TbState.input_bits and the IPC wire protocol. n beyond
+ * TB_MAX_INPUT_REGS is ignored rather than shifted, which would be undefined behavior. */
+uint32_t tb_regs_to_input_bits(const uint16_t* regs, int n);

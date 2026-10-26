@@ -1,11 +1,12 @@
 #include "iface_scan.h"
 
-#include <stddef.h>
-#include <unistd.h>
+#include "usb_resolve.h"
 
-bool tb_iface_detect(const char* port)
+bool tb_iface_detect(const TbIface* iface)
 {
-    if (!port || port[0] == '\0')
+    if (iface->usb_location == 0)
         return false;
-    return access(port, F_OK) == 0;
+
+    char path[256];
+    return tb_usb_resolve(iface->usb_location, path, sizeof(path)) == 0;
 }

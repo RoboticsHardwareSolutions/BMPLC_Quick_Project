@@ -66,7 +66,7 @@ cmake --build . --target example_toggle_output
 
 ```toml
 [io.connection]
-    port = "/dev/cu.usbserial-XXXX"   # macOS: use /dev/cu.*, not /dev/tty.* -- see Troubleshooting
+    usb_location = 0x140000           # IOKit locationID -- see "USB port mapping (macOS)" below
     inputs_id = 1                     # Modbus slave ID exposing inputs as Holding Registers
     ouputs_id = 2                     # (sic -- matches the existing typo'd key) outputs as Coils
     baudrate = 115200
@@ -87,10 +87,45 @@ cmake --build . --target example_toggle_output
         ...
 
 [iface.canbus]
-    port = "/dev/tty.usbserial-XXXX"  # presence-only check (stat(), never opened)
+    usb_location = 0x110000           # presence-only check, never opened
 [iface.rs422]
     ...
 ```
+
+### USB port mapping (macOS)
+
+On macOS, `/dev/cu.usbserial-*`/`/dev/tty.usbserial-*` names for cheap USB-serial
+adapters are **not stable across reboots**: a chip with no EEPROM serial (e.g. this
+bench's `io.connection` CH340 adapter) gets a name derived from its USB enumeration,
+and some Prolific PL2303 clones either fail to report their serial at all on a given
+boot (falling back to the same enumeration-derived naming) or ship with a **non-unique
+factory-default serial shared across multiple physical units** — on this bench,
+`canbus` and `rs485` both report serial `00007902`. There's no `port` key in
+`testbench.toml` at all — `usb_location` is the only way a device is identified, and
+there's nothing to keep in sync by hand.
+
+`usb_location` sidesteps both problems: it's the IOKit `locationID`, which encodes the
+*physical hub port* the adapter is plugged into, and is resolved to whatever `/dev`
+name that port currently has every time the daemon opens/reconnects the serial
+connection (`io.connection`) or checks presence (`[iface.*]`). The resolved path is
+always the `/dev/cu.*` callout device (`IOCalloutDevice` in the IOKit registry), never
+`/dev/tty.*` — so the carrier-detect hang mentioned below never applies to anything
+this tool opens itself.
+
+Current mapping on this bench (derived by unplugging each adapter in turn and diffing
+`ioreg -p IOUSB -l -w0` for the `locationID` that disappeared):
+
+| Config entry | `usb_location` | Chip | Notes |
+|---|---|---|---|
+| `io.connection` | `0x140000` | CH340 | no EEPROM serial |
+| `iface.rs422` | `0x120000` | Prolific PL2303 clone | serial `0000D4A3`, unique |
+| `iface.rs485` | `0x130000` | Prolific PL2303 clone | serial `00007902`, duplicated |
+| `iface.canbus` | `0x110000` | Prolific PL2303 clone | serial `00007902`, duplicated |
+| `iface.rs232` | `0x3130000` | Prolific PL2303 clone | serial not always read |
+
+**This mapping only survives as long as each adapter stays in the same physical hub
+port** — moving a cable to a different port on the hub requires re-deriving its
+`locationID` with the same unplug-and-diff procedure.
 
 Every label shown anywhere by this tool — CLI output, the web UI, the HTTP JSON API —
 comes directly from `[io.map.inputs.labels]`/`[io.map.outputs.labels]`; nothing is
@@ -159,8 +194,8 @@ zeroed. The daemon-routed path instead mutates the daemon's persistent desired-s
 cache directly (no read-before-write needed — the cache is always authoritative).
 
 `--list` and `--iface` never touch the serial port or the daemon (`--list` only reads
-the config; `--iface` is a `stat()` against each `[iface.*]` path — presence-only,
-never captures the port).
+the config; `--iface` resolves each `[iface.*]`'s `usb_location` via IOKit —
+presence-only, never opens the device).
 
 ## Web control panel
 
@@ -209,15 +244,12 @@ label-resolving example per language, all verified against real hardware.
 - **Two processes can't share the port:** only one process may hold the serial port
   at a time — if anything else (another `testbench` instance, a one-off script, a
   debugging session) has it open, every transaction here will fail or contend for the
-  bus. Make sure nothing else is pointed at the same `[io.connection].port` before
-  starting a daemon.
-- **Every Modbus transaction times out, but the port opens fine:** on macOS, use
-  `/dev/cu.usbserial-*`, not `/dev/tty.usbserial-*` — the `tty.*` node blocks on
-  carrier-detect semantics this kind of USB-serial adapter never satisfies.
-- **The configured port doesn't exist:** this adapter's device-node ID can drift
-  across reconnects/different USB ports (it isn't a fixed-serial FTDI device like the
-  `[iface.*]` adapters are). Compare `ls /dev/tty.usbserial-* /dev/cu.usbserial-*`
-  against `[io.connection].port` and update it if needed.
+  bus. Make sure nothing else is pointed at the same `[io.connection].usb_location`
+  before starting a daemon.
+- **`io.connection.usb_location is not set` / `no usb device currently at location
+  0x...`:** either `usb_location` is missing from `testbench.toml`, or the adapter at
+  that physical hub port is actually unplugged/powered off. See "USB port mapping
+  (macOS)" above for how to (re-)derive the right value.
 - **`nng_req0_open`/`nng_rep0_open` aborts with an `assert` panic:** the `nng`
   submodule drifted off the pinned `v1.x` tag onto an unstable pre-release commit —
   `cd ../thirdparty/nng && git checkout v1.12.5` (or whatever the current pin is).

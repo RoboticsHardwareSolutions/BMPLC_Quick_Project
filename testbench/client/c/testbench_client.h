@@ -19,9 +19,17 @@ typedef struct TbClient TbClient;
 TbClient* tb_client_connect(const char* url);
 void      tb_client_close(TbClient* c);
 
-/* Every call below returns false on any failure (no daemon, timeout, bad response) and
- * leaves out-parameters untouched. Each call has its own short send/recv timeout, so
- * none of these block indefinitely if the daemon has gone away. */
+/* Every call below returns false on any failure and leaves out-parameters untouched.
+ * Each call has its own short send/recv timeout, so none of these block indefinitely
+ * if the daemon has gone away. "Failure" covers two distinct situations:
+ *   - the daemon is unreachable (not running, timeout, malformed response), or
+ *   - the daemon is reachable but its Modbus link to the hardware is currently down
+ *     (get_inputs/get_outputs: the last poll of that direction didn't actually reach
+ *     the bus, so there's no trustworthy data to hand back; set_coils_mask: the write
+ *     would never reach the hardware, so the daemon rejects it outright instead of
+ *     silently queuing it).
+ * tb_client_get_status() and tb_client_ping() are NOT gated on Modbus health -- they
+ * stay available specifically so a caller can diagnose *why* the others are failing. */
 bool tb_client_ping(TbClient* c);
 bool tb_client_get_inputs(TbClient* c, uint32_t* bits, uint64_t* ts_ms, bool* valid);
 bool tb_client_get_outputs(TbClient* c, uint32_t* bits, int32_t* min_addr, int32_t* span);

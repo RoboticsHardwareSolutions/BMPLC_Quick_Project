@@ -8,79 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "iface_scan.h"
-
-/* A one-shot CLI call has no next poll cycle to fall back on the way the daemon does,
- * so transient RS485 bus noise (a single corrupted frame, CRC mismatch) would otherwise
- * fail the whole command. Retry up to cfg->retries times, matching the `retries` key
- * already declared (but previously unused) in testbench.toml. */
-static int read_registers_retry(modbus_t* ctx, int addr, int n, uint16_t* dest, int attempts)
-{
-    if (attempts < 1)
-        attempts = 1;
-    int rc = -1;
-    for (int a = 0; a < attempts; a++)
-    {
-        rc = modbus_read_registers(ctx, addr, n, dest);
-        if (rc == n)
-            return rc;
-        if (a + 1 < attempts)
-            usleep(50000);
-    }
-    return rc;
-}
-
-static int read_bits_retry(modbus_t* ctx, int addr, int n, uint8_t* dest, int attempts)
-{
-    if (attempts < 1)
-        attempts = 1;
-    int rc = -1;
-    for (int a = 0; a < attempts; a++)
-    {
-        rc = modbus_read_bits(ctx, addr, n, dest);
-        if (rc == n)
-            return rc;
-        if (a + 1 < attempts)
-            usleep(50000);
-    }
-    return rc;
-}
-
-static int write_bits_retry(modbus_t* ctx, int addr, int n, const uint8_t* data, int attempts)
-{
-    if (attempts < 1)
-        attempts = 1;
-    int rc = -1;
-    for (int a = 0; a < attempts; a++)
-    {
-        rc = modbus_write_bits(ctx, addr, n, data);
-        if (rc == n)
-            return rc;
-        if (a + 1 < attempts)
-            usleep(50000);
-    }
-    return rc;
-}
-
-static modbus_t* open_ctx(const TbConfig* cfg, char* errbuf, size_t errbuf_len)
-{
-    modbus_t* ctx = modbus_new_rtu(cfg->port, cfg->baudrate, 'N', 8, 1);
-    if (!ctx)
-    {
-        snprintf(errbuf, errbuf_len, "modbus_new_rtu(%s): %s", cfg->port, modbus_strerror(errno));
-        return NULL;
-    }
-    uint32_t to_sec  = (uint32_t) cfg->timeout_s;
-    uint32_t to_usec = (uint32_t) ((cfg->timeout_s - (double) to_sec) * 1000000.0);
-    modbus_set_response_timeout(ctx, to_sec, to_usec);
-    if (modbus_connect(ctx) != 0)
-    {
-        snprintf(errbuf, errbuf_len, "modbus_connect(%s): %s", cfg->port, modbus_strerror(errno));
-        modbus_free(ctx);
-        return NULL;
-    }
-    return ctx;
-}
+#include "modbus_io.h"
+#include "usb_resolve.h"
 
 int tb_cli_list(const TbConfig* cfg)
 {
@@ -98,7 +27,7 @@ int tb_cli_list(const TbConfig* cfg)
 int tb_cli_read(const TbConfig* cfg)
 {
     char      errbuf[256];
-    modbus_t* ctx = open_ctx(cfg, errbuf, sizeof(errbuf));
+    modbus_t* ctx = tb_modbus_open_ctx(cfg, errbuf, sizeof(errbuf));
     if (!ctx)
     {
         fprintf(stderr, "testbench: %s\n", errbuf);
@@ -107,7 +36,7 @@ int tb_cli_read(const TbConfig* cfg)
 
     modbus_set_slave(ctx, cfg->inputs_id);
     uint16_t regs[TB_MAX_INPUT_REGS] = {0};
-    int rc = read_registers_retry(ctx, cfg->input_start_address, cfg->input_count, regs, cfg->retries);
+    int rc = tb_modbus_read_registers_retry(ctx, cfg->input_start_address, cfg->input_count, regs, cfg->retries);
 
     int status = 0;
     if (rc != cfg->input_count)
@@ -117,9 +46,7 @@ int tb_cli_read(const TbConfig* cfg)
     }
     else
     {
-        uint32_t bits = 0;
-        for (int i = 0; i < cfg->input_count; i++)
-            bits |= ((uint32_t) regs[i]) << (16 * i);
+        uint32_t bits = tb_regs_to_input_bits(regs, cfg->input_count);
         for (int i = 0; i < cfg->input_label_count; i++)
         {
             int idx = cfg->input_labels[i].index;
@@ -202,7 +129,7 @@ int tb_cli_write(const TbConfig* cfg, const char* assignments)
     int base = cfg->output_min_addr + lo;
 
     char      errbuf[256];
-    modbus_t* ctx = open_ctx(cfg, errbuf, sizeof(errbuf));
+    modbus_t* ctx = tb_modbus_open_ctx(cfg, errbuf, sizeof(errbuf));
     if (!ctx)
     {
         fprintf(stderr, "testbench: %s\n", errbuf);
@@ -214,7 +141,7 @@ int tb_cli_write(const TbConfig* cfg, const char* assignments)
      * a one-shot CLI call has no persistent desired-state cache to rewrite from, so it
      * must not blindly zero the coils it wasn't asked to change. */
     uint8_t bits[TB_MAX_OUTPUT_SPAN] = {0};
-    if (read_bits_retry(ctx, base, span, bits, cfg->retries) != span)
+    if (tb_modbus_read_bits_retry(ctx, base, span, bits, cfg->retries) != span)
     {
         fprintf(stderr, "testbench: read-before-write failed: %s\n", modbus_strerror(errno));
         modbus_close(ctx);
@@ -226,7 +153,7 @@ int tb_cli_write(const TbConfig* cfg, const char* assignments)
             bits[(cfg->output_min_addr + bit) - base] = (uint8_t) ((value >> bit) & 1u);
 
     int status = 0;
-    if (write_bits_retry(ctx, base, span, bits, cfg->retries) != span)
+    if (tb_modbus_write_bits_retry(ctx, base, span, bits, cfg->retries) != span)
     {
         fprintf(stderr, "testbench: write failed: %s\n", modbus_strerror(errno));
         status = 1;
@@ -252,8 +179,13 @@ int tb_cli_iface(const TbConfig* cfg)
     int missing = 0;
     for (int i = 0; i < cfg->iface_count; i++)
     {
-        bool found = tb_iface_detect(cfg->iface[i].port);
-        printf("  %-10s %-32s %s\n", cfg->iface[i].name, cfg->iface[i].port, found ? "[ FOUND ]" : "[ NOT DETECTED ]");
+        char path[256] = "(not attached)";
+        bool found      = cfg->iface[i].usb_location != 0 && tb_usb_resolve(cfg->iface[i].usb_location, path, sizeof(path)) == 0;
+        printf("  %-10s loc=0x%-8x %-28s %s\n",
+               cfg->iface[i].name,
+               cfg->iface[i].usb_location,
+               path,
+               found ? "[ FOUND ]" : "[ NOT DETECTED ]");
         if (!found)
             missing++;
     }

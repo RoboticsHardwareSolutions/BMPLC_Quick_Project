@@ -101,9 +101,13 @@ add_executable(testbench
     src/http_server.c
     src/ipc_server.c
     src/daemonize.c
+    src/usb_resolve.c
 )
 target_include_directories(testbench PRIVATE include)
 target_link_libraries(testbench PRIVATE tomlc17 modbus mongoose_host nng testbench_client Threads::Threads)
+if(APPLE)
+    target_link_libraries(testbench PRIVATE "-framework IOKit" "-framework CoreFoundation")
+endif()
 
 # ---- example programs (see examples/README.md) ----
 # 01: the bare C API, no label resolution -- just testbench_client.h.

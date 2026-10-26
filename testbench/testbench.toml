@@ -1,6 +1,6 @@
 [targets.plc_m]
     mcu = "STM32F103RE"
-    jlink_serial = "..."
+    jlink_serial = "000772440172"
 
 
 [targets.plc_xl]
@@ -9,10 +9,7 @@
 
 
 [io.connection]
-    # macOS: use /dev/cu.* here, not /dev/tty.* -- the tty.* node waits on carrier-detect
-    # semantics that this adapter never satisfies, which makes every Modbus transaction
-    # time out even though the port opens successfully.
-    port = "/dev/cu.usbserial-3140"
+    usb_location = 0x140000
     inputs_id = 1
     ouputs_id = 2
     baudrate = 115200
@@ -72,13 +69,13 @@
 
 
 [iface.canbus]
-    port = "/dev/tty.usbserial-DN0536AY"
+    usb_location = 0x110000
 
 [iface.rs422]
-    port = "/dev/tty.usbserial-0000D4A3"
+    usb_location = 0x120000
 
 [iface.rs485]
-    port = "/dev/tty.usbserial-00007902"
+    usb_location = 0x130000
 
 [iface.rs232]
-    port = "/dev/tty.usbserial-DN0536AY"
+    usb_location = 0x3130000

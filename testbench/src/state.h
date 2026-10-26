@@ -17,10 +17,16 @@ typedef struct
     uint8_t  output_bits[TB_MAX_OUTPUT_SPAN]; /* one byte per coil (0/1), index = addr - output_min_addr */
     int      output_span;
     uint64_t output_ts_ms;
+    bool     output_valid; /* true once the most recent coil write actually reached the bus */
 
     uint64_t poll_count;
     uint64_t poll_errors;
     uint64_t start_ts_ms;
+
+    /* Cached presence of each [iface.*] probe -- refreshed periodically by the main
+     * poll loop (IOKit enumeration is too expensive to run per HTTP request). */
+    bool     iface_present[TB_MAX_IFACES];
+    uint64_t iface_ts_ms;
 } TbState;
 
 void     tb_state_init(TbState* st, int output_span);
