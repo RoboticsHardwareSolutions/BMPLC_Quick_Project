@@ -9,6 +9,12 @@
 
 #include "testbench_proto.h"
 
+/* TbIfaceStatusResp.path is a hand-sized literal (testbench_proto.h) that must match
+ * TB_IFACE_PATH_LEN (config.h) exactly -- the memcpy below copies between the two
+ * byte-for-byte. Caught at compile time rather than relying on the comment alone. */
+_Static_assert(sizeof(((TbIfaceStatusResp*) 0)->path) == TB_IFACE_PATH_LEN,
+                "TbIfaceStatusResp.path size must match TB_IFACE_PATH_LEN");
+
 struct TbIpc
 {
     nng_socket      sock;
@@ -117,6 +123,41 @@ static size_t handle_request(TbIpc* ipc, const uint8_t* req, size_t req_len, uin
             body.poll_count  = ipc->st->poll_count;
             body.poll_errors = ipc->st->poll_errors;
             pthread_mutex_unlock(&ipc->st->mutex);
+
+            rh.status = TB_STATUS_OK;
+            memcpy(resp, &rh, sizeof(rh));
+            memcpy(resp + off, &body, sizeof(body));
+            return off + sizeof(body);
+        }
+        case TB_OP_GET_IFACE_STATUS:
+        {
+            if (payload_len < sizeof(TbIfaceStatusReq))
+                break;
+            TbIfaceStatusReq in;
+            memcpy(&in, payload, sizeof(in));
+
+            const char* name = tb_iface_name((TbIfaceId) in.iface);
+            if (!name)
+                break; /* not one of the four known TB_IFACE_* values -- bad request */
+
+            int idx = -1;
+            for (int i = 0; i < ipc->cfg->iface_count; i++)
+                if (strcmp(ipc->cfg->iface[i].name, name) == 0)
+                {
+                    idx = i;
+                    break;
+                }
+
+            /* Not found in this stand's testbench.toml -- valid data (simply "not
+             * present"), not an error; present/path stay 0/"" below. */
+            TbIfaceStatusResp body = {0};
+            if (idx >= 0)
+            {
+                pthread_mutex_lock(&ipc->st->mutex);
+                body.present = ipc->st->iface_present[idx] ? 1 : 0;
+                memcpy(body.path, ipc->st->iface_path[idx], sizeof(body.path));
+                pthread_mutex_unlock(&ipc->st->mutex);
+            }
 
             rh.status = TB_STATUS_OK;
             memcpy(resp, &rh, sizeof(rh));

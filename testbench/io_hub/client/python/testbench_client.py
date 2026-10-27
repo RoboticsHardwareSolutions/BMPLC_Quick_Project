@@ -26,8 +26,16 @@ _OP_GET_INPUTS = 1
 _OP_GET_OUTPUTS = 2
 _OP_SET_COILS_MASK = 3
 _OP_GET_STATUS = 4
+_OP_GET_IFACE_STATUS = 5
 
 _STATUS_OK = 0
+
+# The four well-known [iface.*] interface kinds iface_available() can ask about --
+# mirrors the TB_IFACE_* enum in testbench_proto.h exactly.
+TB_IFACE_CANBUS = 0
+TB_IFACE_RS422 = 1
+TB_IFACE_RS485 = 2
+TB_IFACE_RS232 = 3
 
 # "=" -- native byte order, standard size, NO padding: matches the daemon's
 # #pragma pack(push, 1) C structs (testbench_proto.h) exactly.
@@ -37,6 +45,8 @@ _SET_COILS_REQ = struct.Struct("=II")
 _INPUTS_RESP = struct.Struct("=IQB")
 _OUTPUTS_RESP = struct.Struct("=Iii")
 _STATUS_RESP = struct.Struct("=QQQ")
+_IFACE_STATUS_REQ = struct.Struct("=B")
+_IFACE_STATUS_RESP = struct.Struct("=B64s")
 
 _RECV_TIMEOUT_MS = 1000
 _SEND_TIMEOUT_MS = 1000
@@ -122,6 +132,25 @@ class TestbenchClient:
     def get_status(self) -> dict:
         uptime_ms, poll_count, poll_errors = _STATUS_RESP.unpack(self._call(_OP_GET_STATUS))
         return {"uptime_ms": uptime_ms, "poll_count": poll_count, "poll_errors": poll_errors}
+
+    def iface_available(self, iface: int) -> tuple[bool, str]:
+        """Is this one [iface.*] interface (TB_IFACE_CANBUS/RS422/RS485/RS232) available
+        right now? Unlike every other method above, this one never raises -- it returns
+        (False, "") uniformly whether the daemon didn't respond, the interface isn't
+        configured in this stand's testbench.toml, or it's configured but not currently
+        detected. Other test utilities are expected to treat all three the same way:
+        this interface isn't usable right now. Mirrors ping()'s "always succeeds" style.
+        Call ping() first if you need to tell "daemon down" apart from that.
+
+        On success, returns (True, path) where path is the currently-resolved /dev
+        path (e.g. "/dev/cu.usbserial-DN0536AY")."""
+        try:
+            present, path = _IFACE_STATUS_RESP.unpack(self._call(_OP_GET_IFACE_STATUS, _IFACE_STATUS_REQ.pack(iface)))
+            if not present:
+                return False, ""
+            return True, path.split(b"\0", 1)[0].decode("ascii")
+        except TestbenchIpcError:
+            return False, ""
 
 
 @dataclass(frozen=True)

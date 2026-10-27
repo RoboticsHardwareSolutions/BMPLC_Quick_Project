@@ -10,6 +10,9 @@
 #define TB_MAX_INPUT_REGS 2
 #define TB_MAX_OUTPUT_SPAN 64
 #define TB_MAX_IFACES 8
+/* Must match the path field size in testbench_proto.h's TbIfaceStatusResp -- the IPC
+ * response copies TbState.iface_path[] into that wire struct byte-for-byte. */
+#define TB_IFACE_PATH_LEN 64
 
 typedef struct
 {

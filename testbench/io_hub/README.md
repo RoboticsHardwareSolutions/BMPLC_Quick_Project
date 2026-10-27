@@ -60,6 +60,7 @@ configure (skipped on subsequent `cmake` runs once `config.h` exists).
 cmake --build . --target testbench_client        # the C IPC client library, standalone
 cmake --build . --target example_read_inputs      # examples/, see examples/README.md
 cmake --build . --target example_toggle_output
+cmake --build . --target example_check_iface
 ```
 
 ## Configuration — `testbench.toml`
@@ -228,12 +229,25 @@ masks.
 - **C client:** [`client/c/testbench_client.h`](client/c/testbench_client.h) /
   `.c` — `tb_client_connect()`, `tb_client_get_inputs()`,
   `tb_client_get_outputs()`, `tb_client_set_coils_mask()`, `tb_client_get_status()`,
-  `tb_client_ping()`.
+  `tb_client_ping()`, `tb_client_iface_available()`.
 - **Python client:** [`client/python/testbench_client.py`](client/python/testbench_client.py)
-  — `TestbenchClient` (the same calls) + `TestbenchLabels` (parses `testbench.toml`,
-  does label <-> bit translation, builds `set_coils_mask()` requests from a
-  `{label: bool}` dict). Needs the optional `pynng` dependency:
-  `uv sync --extra ipc` from the repo root.
+  — `TestbenchClient` (the same calls, including `iface_available()`) +
+  `TestbenchLabels` (parses `testbench.toml`, does label <-> bit translation, builds
+  `set_coils_mask()` requests from a `{label: bool}` dict). Needs the optional
+  `pynng` dependency: `uv sync --extra ipc` from the repo root.
+
+`tb_client_iface_available()` / `iface_available()` ask the daemon whether one of the
+four well-known `[iface.*]` interfaces (`TB_IFACE_CANBUS`/`RS422`/`RS485`/`RS232`) is
+available right now. Unlike every other call above, this one always returns `false`
+(C: with an empty path string; Python: `(False, "")`) for every failure reason —
+daemon unreachable, interface not configured in this stand's `testbench.toml`, or
+configured but not currently detected — so other test utilities get one answer
+("usable right now or not") without having to tell those cases apart. On success it
+also hands back the currently-resolved `/dev` path (e.g. `/dev/cu.usbserial-DN0536AY`)
+so a caller can open that device directly. This is a different check from the
+`--iface` CLI flag below: `--iface` is local-only and never touches the daemon, while
+this one is specifically daemon-routed so it can also report "daemon didn't respond"
+as unavailable.
 
 **Full worked examples with their own documentation:** [`examples/README.md`](examples/README.md)
 (`examples/c/`, `examples/python/`) — one minimal/bare example and one realistic

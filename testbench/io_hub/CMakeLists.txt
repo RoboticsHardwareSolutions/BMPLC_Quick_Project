@@ -120,3 +120,8 @@ target_link_libraries(example_read_inputs PRIVATE testbench_client)
 add_executable(example_toggle_output examples/c/02_toggle_output.c src/config.c)
 target_include_directories(example_toggle_output PRIVATE src)
 target_link_libraries(example_toggle_output PRIVATE testbench_client tomlc17)
+
+# 03: [iface.*] interface availability -- no label/TOML resolution needed, the daemon
+# itself is authoritative for the four well-known TB_IFACE_* interface kinds.
+add_executable(example_check_iface examples/c/03_check_iface.c)
+target_link_libraries(example_check_iface PRIVATE testbench_client)

@@ -8,8 +8,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "iface_scan.h"
 #include "modbus_io.h"
-#include "usb_resolve.h"
 
 int tb_cli_list(const TbConfig* cfg)
 {
@@ -179,8 +179,10 @@ int tb_cli_iface(const TbConfig* cfg)
     int missing = 0;
     for (int i = 0; i < cfg->iface_count; i++)
     {
-        char path[256] = "(not attached)";
-        bool found      = cfg->iface[i].usb_location != 0 && tb_usb_resolve(cfg->iface[i].usb_location, path, sizeof(path)) == 0;
+        char path[TB_IFACE_PATH_LEN];
+        bool found = tb_iface_detect(&cfg->iface[i], path, sizeof(path));
+        if (!found)
+            strcpy(path, "(not attached)");
         printf("  %-10s loc=0x%-8x %-28s %s\n",
                cfg->iface[i].name,
                cfg->iface[i].usb_location,

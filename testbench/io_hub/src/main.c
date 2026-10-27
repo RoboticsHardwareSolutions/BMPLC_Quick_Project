@@ -366,11 +366,13 @@ int main(int argc, char** argv)
         if (now >= iface_next_ts)
         {
             bool present[TB_MAX_IFACES];
+            char path[TB_MAX_IFACES][TB_IFACE_PATH_LEN];
             for (int i = 0; i < cfg.iface_count; i++)
-                present[i] = tb_iface_detect(&cfg.iface[i]);
+                present[i] = tb_iface_detect(&cfg.iface[i], path[i], sizeof(path[i]));
 
             pthread_mutex_lock(&st.mutex);
             memcpy(st.iface_present, present, sizeof(bool) * (size_t) cfg.iface_count);
+            memcpy(st.iface_path, path, sizeof(path[0]) * (size_t) cfg.iface_count);
             st.iface_ts_ms = now;
             pthread_mutex_unlock(&st.mutex);
 
@@ -415,19 +417,29 @@ int main(int argc, char** argv)
 
         if (!daemonize)
         {
+            /* Copy out just the fields the status line needs, then print without
+             * holding the mutex -- fprintf/fflush can block indefinitely on a stalled
+             * stdout consumer (scroll-locked terminal, slow pipe reader), and every
+             * IPC/HTTP request needing st.mutex would stall right along with it. */
+            uint32_t input_bits;
+            uint64_t poll_count, poll_errors;
             pthread_mutex_lock(&st.mutex);
+            input_bits  = st.input_bits;
+            poll_count  = st.poll_count;
+            poll_errors = st.poll_errors;
+            pthread_mutex_unlock(&st.mutex);
+
             fprintf(stdout,
                     "%sinputs=0x%08x outputs=%d..%d polls=%llu errors=%llu %-5s%s",
                     stdout_is_tty ? "\r" : "",
-                    st.input_bits,
+                    input_bits,
                     cfg.output_min_addr,
                     cfg.output_min_addr + cfg.output_span - 1,
-                    (unsigned long long) st.poll_count,
-                    (unsigned long long) st.poll_errors,
+                    (unsigned long long) poll_count,
+                    (unsigned long long) poll_errors,
                     rc == 0 ? "ok" : "ERR",
                     stdout_is_tty ? "" : "\n");
             fflush(stdout);
-            pthread_mutex_unlock(&st.mutex);
         }
 
         usleep((useconds_t) cfg.poll_interval_ms * 1000);

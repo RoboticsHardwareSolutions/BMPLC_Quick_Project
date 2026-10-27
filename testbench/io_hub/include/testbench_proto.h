@@ -5,14 +5,19 @@
  * the same testbench.toml (see TbConfig / testbench_client.py's own tomllib use) and
  * only ever sends/receives bit positions and addresses over the wire.
  *
- * iface.* presence is intentionally NOT part of this protocol: it's a stateless
- * stat() check against paths already in testbench.toml, so a client can do it itself
- * without round-tripping through the daemon.
+ * iface.* presence IS part of this protocol, but narrowly: TB_OP_GET_IFACE_STATUS
+ * answers "is this one specific interface available right now?" for one of the four
+ * well-known interface kinds (TB_IFACE_*), nothing more. A client-side stat() check
+ * can't tell "device unplugged" apart from "daemon not running", and other test
+ * utilities need that distinction collapsed into a single answer -- which only a
+ * daemon-routed call can give. There's deliberately no "list all interfaces" call:
+ * callers already know which of the four kinds they care about.
  *
  * All multi-byte fields are native-endian -- this is a localhost-only, same-machine
  * IPC transport (ipc:// = a Unix domain socket under the hood), not a network protocol.
  */
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define TB_PROTO_VERSION 1
@@ -21,11 +26,12 @@
 
 enum
 {
-    TB_OP_PING            = 0,
-    TB_OP_GET_INPUTS      = 1,
-    TB_OP_GET_OUTPUTS     = 2,
-    TB_OP_SET_COILS_MASK = 3,
-    TB_OP_GET_STATUS      = 4,
+    TB_OP_PING             = 0,
+    TB_OP_GET_INPUTS       = 1,
+    TB_OP_GET_OUTPUTS      = 2,
+    TB_OP_SET_COILS_MASK   = 3,
+    TB_OP_GET_STATUS       = 4,
+    TB_OP_GET_IFACE_STATUS = 5,
 };
 
 enum
@@ -33,6 +39,36 @@ enum
     TB_STATUS_OK    = 0,
     TB_STATUS_ERROR = 1,
 };
+
+/* The four well-known [iface.*] interface kinds TB_OP_GET_IFACE_STATUS can ask about.
+ * Not every testbench.toml configures all four -- one that's absent from this stand's
+ * config answers "not present" (TB_STATUS_OK, present=0), same as one that's
+ * configured but not currently plugged in; only a value outside this enum is a
+ * protocol error (TB_STATUS_ERROR). Named (not anonymous) so client APIs can take a
+ * TbIfaceId parameter instead of a bare int. */
+typedef enum
+{
+    TB_IFACE_CANBUS = 0,
+    TB_IFACE_RS422  = 1,
+    TB_IFACE_RS485  = 2,
+    TB_IFACE_RS232  = 3,
+} TbIfaceId;
+
+/* Canonical TB_IFACE_* <-> [iface.<name>] TOML key name mapping -- the one place this
+ * is spelled out, shared by the daemon (ipc_server.c) and any other C code that needs
+ * to go from one to the other (e.g. a CLI/example argument parser). Returns NULL for
+ * a value outside the enum. */
+static inline const char* tb_iface_name(TbIfaceId id)
+{
+    switch (id)
+    {
+        case TB_IFACE_CANBUS: return "canbus";
+        case TB_IFACE_RS422:  return "rs422";
+        case TB_IFACE_RS485:  return "rs485";
+        case TB_IFACE_RS232:  return "rs232";
+    }
+    return NULL;
+}
 
 #pragma pack(push, 1)
 
@@ -85,5 +121,22 @@ typedef struct
     uint64_t poll_count;
     uint64_t poll_errors;
 } TbStatusResp;
+
+/* TB_OP_GET_IFACE_STATUS request payload. `iface` is one of the TB_IFACE_* values. */
+typedef struct
+{
+    uint8_t iface;
+} TbIfaceStatusReq;
+
+/* TB_OP_GET_IFACE_STATUS response payload. `path` is the resolved /dev/cu.* path
+ * (NUL-terminated) when present=1; an empty string when present=0, for any reason
+ * (not currently plugged in, not configured in this stand's testbench.toml, daemon
+ * unreachable never reaches this struct at all). 64 must match TB_IFACE_PATH_LEN in
+ * src/config.h, which TbState.iface_path[]'s entries are sized to. */
+typedef struct
+{
+    uint8_t present;
+    char    path[64];
+} TbIfaceStatusResp;
 
 #pragma pack(pop)

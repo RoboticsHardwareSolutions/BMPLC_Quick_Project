@@ -133,3 +133,23 @@ bool tb_client_get_status(TbClient* c, uint64_t* uptime_ms, uint64_t* poll_count
         *poll_errors = body.poll_errors;
     return true;
 }
+
+bool tb_client_iface_available(TbClient* c, TbIfaceId iface, char* out_path, size_t out_path_len)
+{
+    if (out_path && out_path_len)
+        out_path[0] = '\0';
+
+    TbIfaceStatusReq  req = {(uint8_t) iface};
+    TbIfaceStatusResp body;
+    if (!do_call(c, TB_OP_GET_IFACE_STATUS, &req, sizeof(req), &body, sizeof(body)))
+        return false; /* daemon unreachable, or iface wasn't one of the TB_IFACE_* values */
+
+    bool available = body.present != 0;
+    if (available && out_path && out_path_len)
+    {
+        size_t n = sizeof(body.path) < out_path_len ? sizeof(body.path) : out_path_len - 1;
+        memcpy(out_path, body.path, n);
+        out_path[n] = '\0';
+    }
+    return available;
+}

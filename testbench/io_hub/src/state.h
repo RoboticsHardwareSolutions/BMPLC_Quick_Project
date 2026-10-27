@@ -23,9 +23,11 @@ typedef struct
     uint64_t poll_errors;
     uint64_t start_ts_ms;
 
-    /* Cached presence of each [iface.*] probe -- refreshed periodically by the main
-     * poll loop (IOKit enumeration is too expensive to run per HTTP request). */
+    /* Cached presence (+ resolved /dev path, empty string if not present) of each
+     * [iface.*] probe -- refreshed periodically by the main poll loop (IOKit
+     * enumeration is too expensive to run per HTTP/IPC request). */
     bool     iface_present[TB_MAX_IFACES];
+    char     iface_path[TB_MAX_IFACES][TB_IFACE_PATH_LEN];
     uint64_t iface_ts_ms;
 } TbState;
 

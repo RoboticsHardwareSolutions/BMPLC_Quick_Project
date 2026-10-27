@@ -32,18 +32,41 @@ static void append_json_str_bool_map(char* out, size_t cap, size_t* off, const c
     *off += (size_t) snprintf(out + *off, *off < cap ? cap - *off : 0, "%s\"%s\":%s", first ? "" : ",", key, value ? "true" : "false");
 }
 
-static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t cap)
+/* Everything build_state_json()'s JSON formatting needs, read out of TbState under
+ * its mutex exactly once. Shared by build_state_json() and handle_post_outputs(), so
+ * a write immediately followed by a snapshot (as the latter needs) takes the mutex
+ * only once instead of twice. */
+typedef struct
 {
-    pthread_mutex_lock(&st->mutex);
-    uint32_t in_bits  = st->input_bits;
-    bool     in_valid = st->input_valid;
-    uint64_t in_ts    = st->input_ts_ms;
+    uint32_t in_bits;
+    bool     in_valid;
+    uint64_t in_ts;
     uint8_t  out_bits[TB_MAX_OUTPUT_SPAN];
-    memcpy(out_bits, st->output_bits, (size_t) cfg->output_span);
-    bool iface_present[TB_MAX_IFACES];
-    memcpy(iface_present, st->iface_present, sizeof(bool) * (size_t) cfg->iface_count);
-    uint64_t polls = st->poll_count, errs = st->poll_errors, start = st->start_ts_ms;
-    pthread_mutex_unlock(&st->mutex);
+    bool     iface_present[TB_MAX_IFACES];
+    uint64_t polls, errs, start;
+} TbStateSnapshot;
+
+/* Caller must hold st->mutex. */
+static void snapshot_state_locked(const TbConfig* cfg, const TbState* st, TbStateSnapshot* s)
+{
+    s->in_bits  = st->input_bits;
+    s->in_valid = st->input_valid;
+    s->in_ts    = st->input_ts_ms;
+    memcpy(s->out_bits, st->output_bits, (size_t) cfg->output_span);
+    memcpy(s->iface_present, st->iface_present, sizeof(bool) * (size_t) cfg->iface_count);
+    s->polls = st->poll_count;
+    s->errs  = st->poll_errors;
+    s->start = st->start_ts_ms;
+}
+
+static void format_state_json(const TbConfig* cfg, const TbStateSnapshot* s, char* out, size_t cap)
+{
+    uint32_t       in_bits       = s->in_bits;
+    bool           in_valid      = s->in_valid;
+    uint64_t       in_ts         = s->in_ts;
+    const uint8_t* out_bits      = s->out_bits;
+    const bool*    iface_present = s->iface_present;
+    uint64_t       polls = s->polls, errs = s->errs, start = s->start;
 
     size_t off = 0;
     off += (size_t) snprintf(out + off, off < cap ? cap - off : 0, "{\"inputs\":{");
@@ -83,11 +106,25 @@ static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t
                 cap);
 }
 
+static void build_state_json(const TbConfig* cfg, TbState* st, char* out, size_t cap)
+{
+    TbStateSnapshot s;
+    pthread_mutex_lock(&st->mutex);
+    snapshot_state_locked(cfg, st, &s);
+    pthread_mutex_unlock(&st->mutex);
+    format_state_json(cfg, &s, out, cap);
+}
+
 static void handle_post_outputs(TbHttp* http, struct mg_http_message* hm, struct mg_connection* c)
 {
     const TbConfig* cfg = http->cfg;
     TbState*        st  = http->st;
 
+    /* Apply the write and take the post-write snapshot under a single critical
+     * section -- taking the mutex separately for each (as build_state_json() would
+     * if called naively right after) pays two critical sections for one logical
+     * operation. */
+    TbStateSnapshot s;
     pthread_mutex_lock(&st->mutex);
     for (int i = 0; i < cfg->output_label_count; i++)
     {
@@ -101,10 +138,11 @@ static void handle_post_outputs(TbHttp* http, struct mg_http_message* hm, struct
                 st->output_bits[addr - cfg->output_min_addr] = v ? 1 : 0;
         }
     }
+    snapshot_state_locked(cfg, st, &s);
     pthread_mutex_unlock(&st->mutex);
 
     char buf[TB_STATE_JSON_CAP];
-    build_state_json(cfg, st, buf, sizeof(buf));
+    format_state_json(cfg, &s, buf, sizeof(buf));
     mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s", buf);
 }
 
