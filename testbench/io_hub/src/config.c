@@ -183,12 +183,13 @@ int tb_config_find_output_addr(const TbConfig* cfg, const char* label)
     return -1;
 }
 
-uint32_t tb_regs_to_input_bits(const uint16_t* regs, int n)
+uint32_t tb_bits_to_input_mask(const uint8_t* bits, int n)
 {
-    if (n > TB_MAX_INPUT_REGS)
-        n = TB_MAX_INPUT_REGS;
-    uint32_t bits = 0;
+    if (n > TB_MAX_INPUT_BITS)
+        n = TB_MAX_INPUT_BITS;
+    uint32_t mask = 0;
     for (int i = 0; i < n; i++)
-        bits |= ((uint32_t) regs[i]) << (16 * i);
-    return bits;
+        if (bits[i])
+            mask |= 1u << i;
+    return mask;
 }

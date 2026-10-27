@@ -10,11 +10,11 @@ all three the same way: this interface isn't usable right now.
 Prerequisites:
     - a testbench daemon must already be running, e.g. from testbench/io_hub/:
           ./build/testbench --config ../testbench.toml
-    - the optional `pynng` dependency, from the repo root:
-          uv sync --extra ipc
+    - `pynng`, a core dependency of the repo-root pyproject.toml:
+          uv sync
 
 Usage (from the repo root):
-    uv run --extra ipc python testbench/io_hub/examples/python/03_check_iface.py <canbus|rs422|rs485|rs232>
+    uv run python testbench/io_hub/examples/python/03_check_iface.py <canbus|rs422|rs485|rs232>
 """
 
 import sys

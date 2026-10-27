@@ -17,8 +17,8 @@
     retries = 3                # Number of repetitions
 
 
-[io.map.inputs]     # Read Holding registers for input states
-    register_type = "holding"  # type: holding, input, discrete, coil
+[io.map.inputs]     # Read Discrete Inputs (FC 0x02) for input states
+    register_type = "discrete"  # type: holding, input, discrete, coil
     start_address = 0          # Start address
     count = 2                  # number of registers (16-bit each, total 32 bits)
 
@@ -41,8 +41,8 @@
         "11" = "PLC_M_KEY0"
         "12" = "PLC_M_KEY1"
         "13" = "PLC_M_KEY2"
-        "14" = "PLC_M_KEY4"
-        "15" = "PLC_M_KEY3"
+        "14" = "PLC_M_KEY3"
+        "15" = "PLC_M_KEY4"
 
 [io.map.outputs] # Write outputs
     register_type = "coil"

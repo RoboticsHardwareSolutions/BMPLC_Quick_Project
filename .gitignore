@@ -7,3 +7,9 @@ tests/cmake-*
 /.vscode/settings.json
 /.cache
 /testbench/build
+
+# Python (pytest/uv HIL harness)
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

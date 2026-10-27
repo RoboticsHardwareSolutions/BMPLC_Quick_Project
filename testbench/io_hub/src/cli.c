@@ -13,7 +13,7 @@
 
 int tb_cli_list(const TbConfig* cfg)
 {
-    printf("Inputs (holding registers, slave %d, bit index -> label):\n", cfg->inputs_id);
+    printf("Inputs (discrete inputs, slave %d, bit index -> label):\n", cfg->inputs_id);
     for (int i = 0; i < cfg->input_label_count; i++)
         printf("  %2d  %s\n", cfg->input_labels[i].index, cfg->input_labels[i].name);
 
@@ -35,18 +35,19 @@ int tb_cli_read(const TbConfig* cfg)
     }
 
     modbus_set_slave(ctx, cfg->inputs_id);
-    uint16_t regs[TB_MAX_INPUT_REGS] = {0};
-    int rc = tb_modbus_read_registers_retry(ctx, cfg->input_start_address, cfg->input_count, regs, cfg->retries);
+    uint8_t bits_in[TB_MAX_INPUT_BITS] = {0};
+    int     n_bits                     = cfg->input_count * 16;
+    int     rc = tb_modbus_read_input_bits_retry(ctx, cfg->input_start_address, n_bits, bits_in, cfg->retries);
 
     int status = 0;
-    if (rc != cfg->input_count)
+    if (rc != n_bits)
     {
         fprintf(stderr, "testbench: read failed: %s\n", modbus_strerror(errno));
         status = 1;
     }
     else
     {
-        uint32_t bits = tb_regs_to_input_bits(regs, cfg->input_count);
+        uint32_t bits = tb_bits_to_input_mask(bits_in, n_bits);
         for (int i = 0; i < cfg->input_label_count; i++)
         {
             int idx = cfg->input_labels[i].index;

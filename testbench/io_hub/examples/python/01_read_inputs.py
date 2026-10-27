@@ -9,11 +9,11 @@ examples/c/02_toggle_output.c for the C equivalent).
 Prerequisites:
     - a testbench daemon must already be running, e.g. from testbench/io_hub/:
           ./build/testbench --config ../testbench.toml
-    - the optional `pynng` dependency, from the repo root:
-          uv sync --extra ipc
+    - `pynng`, a core dependency of the repo-root pyproject.toml:
+          uv sync
 
 Usage (from the repo root):
-    uv run --extra ipc python testbench/io_hub/examples/python/01_read_inputs.py [path/to/testbench.toml]
+    uv run python testbench/io_hub/examples/python/01_read_inputs.py [path/to/testbench.toml]
 
     If no config path is given, defaults to testbench/testbench.toml.
 """

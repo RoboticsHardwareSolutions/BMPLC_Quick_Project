@@ -4,9 +4,9 @@ Mirrors testbench/io_hub/client/c/testbench_client.h. Label names are resolved l
 from testbench.toml (the same file the daemon reads) -- only bit positions/addresses
 ever go over the wire, matching testbench/io_hub/include/testbench_proto.h exactly.
 
-Requires the optional `pynng` dependency (not installed by default -- see
-pyproject.toml's `ipc` extra: `uv sync --extra ipc`), since it's only needed by code
-that talks to a running daemon over IPC, not by the HIL test suite.
+Requires `pynng`, a core dependency of the repo-root pyproject.toml (`uv sync` from
+the repo root) -- IPC is the only supported way for the Python HIL test suite (see
+the root conftest.py) to talk to the daemon.
 """
 
 from __future__ import annotations

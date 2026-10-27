@@ -65,14 +65,14 @@ modbus_t* tb_modbus_open_ctx(const TbConfig* cfg, char* errbuf, size_t errbuf_le
     return ctx;
 }
 
-int tb_modbus_read_registers_retry(modbus_t* ctx, int addr, int n, uint16_t* dest, int attempts)
+int tb_modbus_read_input_bits_retry(modbus_t* ctx, int addr, int n, uint8_t* dest, int attempts)
 {
     if (attempts < 1)
         attempts = 1;
     int rc = -1;
     for (int a = 0; a < attempts; a++)
     {
-        rc = modbus_read_registers(ctx, addr, n, dest);
+        rc = modbus_read_input_bits(ctx, addr, n, dest);
         if (rc == n)
             return rc;
         if (a + 1 < attempts)
@@ -179,16 +179,16 @@ int tb_modbus_cycle(TbModbus* m, const TbConfig* cfg, TbState* st)
 {
     int ok = 0;
 
-    /* 1. read inputs (holding registers) */
-    uint16_t regs[TB_MAX_INPUT_REGS] = {0};
-    int      n                       = cfg->input_count;
+    /* 1. read inputs (discrete inputs) */
+    uint8_t bits_in[TB_MAX_INPUT_BITS] = {0};
+    int     n_bits                     = cfg->input_count * 16;
     modbus_set_slave(m->ctx, cfg->inputs_id);
-    int rc = modbus_read_registers(m->ctx, cfg->input_start_address, n, regs);
+    int rc = modbus_read_input_bits(m->ctx, cfg->input_start_address, n_bits, bits_in);
 
     pthread_mutex_lock(&st->mutex);
-    if (rc == n)
+    if (rc == n_bits)
     {
-        st->input_bits  = tb_regs_to_input_bits(regs, n);
+        st->input_bits  = tb_bits_to_input_mask(bits_in, n_bits);
         st->input_valid = true;
         st->input_ts_ms = tb_now_ms();
     }

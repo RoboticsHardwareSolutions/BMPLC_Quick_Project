@@ -6,7 +6,7 @@ one-shot CLI, a web control panel, and a low-latency IPC API (C and Python).
 
 ## Why a daemon
 
-The stand's two Modbus RTU I/O modules (inputs exposed as Holding Registers, outputs
+The stand's two Modbus RTU I/O modules (inputs exposed as Discrete Inputs, outputs
 as Coils) have a **bus-error watchdog**: if no master talks to them for longer than a
 threshold (device default ~2s), they reset/hold their output state until
 communication resumes. A tool that only opens the serial port for the duration of a
@@ -17,7 +17,7 @@ latency.
 `testbench`'s poll thread owns the serial port exclusively and, every cycle (default
 200 ms, `io.connection.poll_interval_ms`):
 
-1. reads the input holding registers (`inputs_id`) into an in-memory 32-bit mask;
+1. reads the input discrete-input bits (`inputs_id`) into an in-memory 32-bit mask;
 2. **unconditionally rewrites the full output coil span** (`outputs_id`) from an
    in-memory "desired state" cache — even when nothing changed. This is what defeats
    the watchdog; everything else (CLI, HTTP, IPC) only ever mutates that cache, never
@@ -29,7 +29,7 @@ Requirements: `cmake` ≥ 3.24, a C11 host compiler, and `autoconf`/`automake`/`
 (used once, to generate `libmodbus`'s `config.h` — see below).
 
 ```sh
-cd testbench
+cd testbench/io_hub
 mkdir -p build && cd build
 cmake ..
 cmake --build . --target testbench
@@ -68,7 +68,7 @@ cmake --build . --target example_check_iface
 ```toml
 [io.connection]
     usb_location = 0x140000           # IOKit locationID -- see "USB port mapping (macOS)" below
-    inputs_id = 1                     # Modbus slave ID exposing inputs as Holding Registers
+    inputs_id = 1                     # Modbus slave ID exposing inputs as Discrete Inputs (FC 0x02)
     ouputs_id = 2                     # (sic -- matches the existing typo'd key) outputs as Coils
     baudrate = 115200
     timeout = 1.5                     # per-transaction response timeout, seconds
@@ -77,7 +77,7 @@ cmake --build . --target example_check_iface
 
 [io.map.inputs]
     start_address = 0
-    count = 2                         # 16-bit holding registers -> 32 input bits
+    count = 2                         # 16-bit-sized groups of discrete-input bits -> 32 input bits
     [io.map.inputs.labels]            # "bit index" = "label name"
         "6" = "PLC_M_OUT0"
         ...
@@ -233,8 +233,10 @@ masks.
 - **Python client:** [`client/python/testbench_client.py`](client/python/testbench_client.py)
   — `TestbenchClient` (the same calls, including `iface_available()`) +
   `TestbenchLabels` (parses `testbench.toml`, does label <-> bit translation, builds
-  `set_coils_mask()` requests from a `{label: bool}` dict). Needs the optional
-  `pynng` dependency: `uv sync --extra ipc` from the repo root.
+  `set_coils_mask()` requests from a `{label: bool}` dict). Needs `pynng`, a core
+  dependency of the repo-root `pyproject.toml` (`uv sync` from the repo root) --
+  IPC is the only supported way for the Python HIL test suite (see the root
+  `conftest.py`) to talk to the daemon.
 
 `tb_client_iface_available()` / `iface_available()` ask the daemon whether one of the
 four well-known `[iface.*]` interfaces (`TB_IFACE_CANBUS`/`RS422`/`RS485`/`RS232`) is

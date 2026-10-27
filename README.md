@@ -188,3 +188,82 @@ void new_test_start_up(void) // This function add callback for your test to CLI
     cli_add_command("new_test", new_test, NULL);
 }
 ```
+
+### Creating HIL tests
+Device tests (above) only exercise on-device logic reachable from the RTT CLI. **HIL
+(Hardware-in-the-Loop) tests** are for anything that needs the physical test bench —
+toggling a PLC's inputs, reading back its outputs/keys, powering a board on/off,
+driving CAN/RS232/RS485/RS422 — via the `testbench/io_hub` daemon, with `pytest`
+driving both the bench and the board (over RTT, via `bmlab-toolkit`) from the host.
+
+**Layout:** each HIL test gets its own folder under `user_tests/<name>/` with two
+subfolders:
+- `target/<name>.c` — the on-device side. Same pattern as "Creating tests" above
+  (register a `cli_add_command` via a `start_up` hook) but typically without the
+  `runit` pass/fail framework, since the bench — not the device — judges pass/fail.
+  See `user_tests/io_test/target/io_test.c` for the reference implementation (an `io`
+  RTT command to read `IN0-4` and drive `OUT0-4`/`KEY0-4`).
+- `testbench/<name>.py` — the host-side `pytest` test. See
+  `user_tests/io_test/testbench/io_test.py` for a complete worked example.
+
+**One-time setup:**
+- `uv sync` from the repo root (installs `pytest`, `bmlab-toolkit`, `pynng`).
+- SEGGER J-Link software installed (`JLinkExe`/`libjlinkarm` on your `PATH`/library
+  path) — **run any J-Link tool once interactively first** (e.g. `JLinkExe`) and
+  accept whatever activation/firmware-update dialog it shows; `pylink`/`bmlab-toolkit`
+  calls block silently waiting on that same dialog otherwise, which looks exactly
+  like a hang.
+- The bench wired up per `testbench/testbench.toml` (see `testbench/io_hub/README.md`
+  for the Modbus/USB-port layout) and built once: `cmake --build
+  testbench/io_hub/build --target testbench`.
+
+**Fixtures** (root `conftest.py` — read it for full details/scopes):
+
+| Fixture | Scope | Gives you |
+|---|---|---|
+| `io_config` | session | resolved `PLC_TYPE`/`JLINK_SERIAL`/`MCU`/paths from env vars + `testbench.toml` |
+| `io_hub_daemon` | session | the running `io_hub` daemon (started/stopped for you; reused if one's already up) |
+| `tb_client` | session | `TestbenchClient` — IPC read/write of the bench's Modbus coils/bits |
+| `tb_labels` | session | `TestbenchLabels` — label ⟷ bit/coil address lookup from `testbench.toml` |
+| `plc_power` | module | powers on + USB-enables the PLC under test before your tests, off after |
+| `plc` | module | flashes (if `IO_TEST_BIN` set) + connects RTT, yields a `PlcRtt` (`run`/`read_inputs`/`set_out`/`set_key`); resets pins + disconnects after |
+
+Never talk to the bench or the daemon any other way (no shelling out to the
+`testbench` CLI, no raw Modbus) — `tb_client`/`tb_labels` are the only supported
+path, and the daemon is the only process allowed to hold the bench's serial port.
+
+**Minimal example** (`user_tests/<name>/testbench/<name>.py`):
+```python
+import os
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("PLC_TYPE"),
+    reason="HIL tests require hardware: set PLC_TYPE=BMPLC_M|BMPLC_XL",
+)
+
+def test_out0_reaches_bench(plc, tb_client, tb_labels, io_config):
+    plc.set_out(0, True)
+    bits = tb_client.get_inputs()["bits"]
+    assert tb_labels.decode_inputs(bits)[f"PLC_{io_config.short}_OUT0"] is True
+    plc.set_out(0, False)
+```
+For dynamic, per-pin parametrization derived from `testbench.toml` (rather than
+hardcoding pin numbers), see `pytest_generate_tests` in
+`user_tests/io_test/testbench/io_test.py` — `pytest.mark.parametrize` can't read
+fixtures, so pin discovery there is done again, independently, at collection time.
+
+**Running:**
+```sh
+# plain `pytest` with no PLC_TYPE set just collects and skips every HIL test, touching nothing
+uv run pytest
+
+# a real run against hardware
+PLC_TYPE=BMPLC_M IO_TEST_BIN=cmake-build-debug/bmplc.bin \
+  uv run pytest user_tests/io_test/testbench/ -v
+```
+Env vars: `PLC_TYPE` (`BMPLC_M`|`BMPLC_XL`, required), `JLINK_SERIAL`/`MCU` (override
+`testbench.toml`'s `[targets.*]`, needed when the toml only has a placeholder),
+`IO_TEST_BIN` (firmware to flash first; omit to test whatever's already on the
+board), `IO_TEST_CONFIG` (alternate `testbench.toml` path), `IO_TEST_NO_POWER` (skip
+the power-on/off step, e.g. if the board is already powered some other way).

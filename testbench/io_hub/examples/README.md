@@ -79,15 +79,15 @@ reimplement the client in another language).
 
 ## Python examples
 
-Require the optional `pynng` dependency (not part of the core HIL test deps). From
+Require `pynng`, a core dependency of the repo-root `pyproject.toml`. From
 the **repo root**:
 
 ```sh
-uv sync --extra ipc
+uv sync
 
-uv run --extra ipc python testbench/io_hub/examples/python/01_read_inputs.py
-uv run --extra ipc python testbench/io_hub/examples/python/02_toggle_output.py USB_EMPTY
-uv run --extra ipc python testbench/io_hub/examples/python/03_check_iface.py canbus
+uv run python testbench/io_hub/examples/python/01_read_inputs.py
+uv run python testbench/io_hub/examples/python/02_toggle_output.py USB_EMPTY
+uv run python testbench/io_hub/examples/python/03_check_iface.py canbus
 ```
 
 The two `0*_*.py` scripts above accept an optional config path as their last argument

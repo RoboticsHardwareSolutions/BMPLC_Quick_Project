@@ -27,7 +27,7 @@ modbus_t* tb_modbus_open_ctx(const TbConfig* cfg, char* errbuf, size_t errbuf_le
  * neither of which has a next poll cycle to fall back on the way tb_modbus_cycle()'s
  * ongoing polling does if a transaction hits transient RS485 bus noise. Returns the
  * underlying libmodbus call's return value from the last attempt. */
-int tb_modbus_read_registers_retry(modbus_t* ctx, int addr, int n, uint16_t* dest, int attempts);
+int tb_modbus_read_input_bits_retry(modbus_t* ctx, int addr, int n, uint8_t* dest, int attempts);
 int tb_modbus_read_bits_retry(modbus_t* ctx, int addr, int n, uint8_t* dest, int attempts);
 int tb_modbus_write_bits_retry(modbus_t* ctx, int addr, int n, const uint8_t* data, int attempts);
 
@@ -40,7 +40,7 @@ int tb_modbus_reconnect(TbModbus* m, const TbConfig* cfg, char* errbuf, size_t e
  * very first poll cycle doesn't stomp the hardware's actual state with zeros. */
 int tb_modbus_seed_outputs(TbModbus* m, const TbConfig* cfg, TbState* st);
 
-/* One poll cycle: read the input holding registers into st->input_bits, then
+/* One poll cycle: read the input discrete-input bits into st->input_bits, then
  * unconditionally rewrite the full output coil span from st->output_bits (this is what
  * keeps the modules' bus-error watchdog satisfied). Returns 0 if both transactions
  * succeeded, -1 otherwise (st->poll_errors is incremented internally either way). */

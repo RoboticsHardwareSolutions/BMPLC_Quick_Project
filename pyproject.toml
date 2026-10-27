@@ -1,0 +1,26 @@
+[project]
+name = "bmplc"
+version = "0.1.0"
+description = "HIL/testbench pytest harness for the BMPLC firmware"
+requires-python = ">=3.14"
+dependencies = [
+    "pytest>=8.0",
+    "bmlab-toolkit",
+    "pynng>=0.8",
+]
+
+[tool.pytest.ini_options]
+norecursedirs = [
+    "*.egg",
+    ".*",
+    "_darcs",
+    "build",
+    "build_*",
+    "cmake-build-*",
+    "CVS",
+    "dist",
+    "node_modules",
+    "venv",
+    ".venv",
+    "thirdparty",
+]

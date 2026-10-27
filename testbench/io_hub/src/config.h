@@ -5,9 +5,11 @@
 
 #define TB_MAX_LABELS 48
 /* TbState.input_bits and the IPC wire protocol are a 32-bit mask, so at most 2
- * 16-bit holding registers can ever be packed into it -- this is not a tunable
- * buffer-size knob, raising it would silently overflow that 32-bit mask. */
+ * 16-bit-sized groups of discrete-input bits can ever be packed into it -- this is
+ * not a tunable buffer-size knob, raising it would silently overflow that 32-bit
+ * mask. */
 #define TB_MAX_INPUT_REGS 2
+#define TB_MAX_INPUT_BITS (TB_MAX_INPUT_REGS * 16)
 #define TB_MAX_OUTPUT_SPAN 64
 #define TB_MAX_IFACES 8
 /* Must match the path field size in testbench_proto.h's TbIfaceStatusResp -- the IPC
@@ -41,9 +43,11 @@ typedef struct
     int    retries; /* one-shot CLI transactions only -- the daemon's poll loop is its own retry */
     int    poll_interval_ms;
 
-    /* [io.map.inputs] -- read as Holding Registers (FC 0x03) */
+    /* [io.map.inputs] -- read as Discrete Inputs (FC 0x02). This stand's physical I/O
+     * module exposes live input state only via FC 0x02; its Holding Register bank
+     * (FC 0x03) reads back as a valid but always-zero/unused memory area. */
     int     input_start_address;
-    int     input_count; /* number of 16-bit registers, clamped to TB_MAX_INPUT_REGS */
+    int     input_count; /* number of 16-bit-sized groups of bits (count*16 total), clamped to TB_MAX_INPUT_REGS */
     TbLabel input_labels[TB_MAX_LABELS];
     int     input_label_count;
 
@@ -70,7 +74,8 @@ const char* tb_config_input_label(const TbConfig* cfg, int bit_index);
 const char* tb_config_output_label(const TbConfig* cfg, int addr);
 int         tb_config_find_output_addr(const TbConfig* cfg, const char* label);
 
-/* Packs up to TB_MAX_INPUT_REGS 16-bit holding registers (regs[0] = low 16 bits) into
- * the 32-bit mask used by TbState.input_bits and the IPC wire protocol. n beyond
- * TB_MAX_INPUT_REGS is ignored rather than shifted, which would be undefined behavior. */
-uint32_t tb_regs_to_input_bits(const uint16_t* regs, int n);
+/* Packs up to TB_MAX_INPUT_BITS discrete-input bits (bits[i] = bit i, as returned by
+ * modbus_read_input_bits()) into the 32-bit mask used by TbState.input_bits and the
+ * IPC wire protocol. n beyond TB_MAX_INPUT_BITS is ignored rather than shifted, which
+ * would be undefined behavior. */
+uint32_t tb_bits_to_input_mask(const uint8_t* bits, int n);
