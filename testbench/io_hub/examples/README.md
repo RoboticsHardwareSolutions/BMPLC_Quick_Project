@@ -2,7 +2,7 @@
 
 Minimal, runnable examples of the two ways to talk to a running `testbench` daemon
 from outside it: the low-latency NNG IPC API, in C and in Python. Both languages use
-the same wire protocol (`testbench/include/testbench_proto.h`) and the same design:
+the same wire protocol (`testbench/io_hub/include/testbench_proto.h`) and the same design:
 
 - **The wire protocol is label-free.** A client only ever sends/receives bit positions
   and 32-bit coil masks -- never label strings. Label names are resolved *locally*,
@@ -11,7 +11,7 @@ the same wire protocol (`testbench/include/testbench_proto.h`) and the same desi
   index *i* in `io.map.inputs.labels`).
 - **Output coils** are addressed relative to `output_min_addr` (the lowest coil
   address used by any label in `io.map.outputs.labels` -- see
-  `testbench/src/config.c`'s comments for why this isn't simply
+  `testbench/io_hub/src/config.c`'s comments for why this isn't simply
   `io.map.outputs.start_address`). Bit *i* of a mask/value pair = coil
   `output_min_addr + i`. The mask is a `uint32_t`, so only a 32-coil span can be
   addressed this way -- both examples below check for this and fail clearly if a
@@ -26,31 +26,31 @@ Each example comes in two flavors:
 
 (Python's `TestbenchClient`/`TestbenchLabels` split already makes label resolution
 trivial, so there's no separate "bare" Python example -- see
-`testbench/client/python/testbench_client.py` if you want to skip `TestbenchLabels`
+`testbench/io_hub/client/python/testbench_client.py` if you want to skip `TestbenchLabels`
 and send raw bit positions yourself, exactly like the C example does.)
 
 ## Prerequisite: a running daemon
 
 All examples talk to an **already-running** `testbench` daemon over its IPC socket
 (default `ipc:///tmp/testbench.ipc`) -- they never touch the serial port themselves.
-Start one first, from `testbench/`:
+Start one first, from `testbench/io_hub/`:
 
 ```sh
-cd testbench/build   # after the normal `cmake .. && cmake --build .` (see testbench/CMakeLists.txt)
-./testbench --config ../testbench.toml
+cd testbench/io_hub/build   # after the normal `cmake .. && cmake --build .` (see testbench/io_hub/CMakeLists.txt)
+./testbench --config ../../testbench.toml
 ```
 
 ## C examples
 
-Built as extra targets in the daemon's own `testbench/CMakeLists.txt` -- no separate
+Built as extra targets in the daemon's own `testbench/io_hub/CMakeLists.txt` -- no separate
 build setup needed:
 
 ```sh
-cd testbench/build
+cd testbench/io_hub/build
 cmake --build . --target example_read_inputs example_toggle_output
 
 ./example_read_inputs
-./example_toggle_output USB_EMPTY ../testbench.toml
+./example_toggle_output USB_EMPTY ../../testbench.toml
 ```
 
 - **`01_read_inputs.c`** -- the minimal form of the API: connect, ping, read the raw
@@ -61,8 +61,8 @@ cmake --build . --target example_read_inputs example_toggle_output
   `tb_config_find_output_addr()`, then flips it with `tb_client_set_coils_mask()` and
   reads it back to confirm. This is the pattern a real application should follow.
 
-Full C API reference: `testbench/client/c/testbench_client.h` (doc comments on every
-function) and `testbench/include/testbench_proto.h` (wire format, if you want to
+Full C API reference: `testbench/io_hub/client/c/testbench_client.h` (doc comments on every
+function) and `testbench/io_hub/include/testbench_proto.h` (wire format, if you want to
 reimplement the client in another language).
 
 ## Python examples
@@ -73,8 +73,8 @@ the **repo root**:
 ```sh
 uv sync --extra ipc
 
-uv run --extra ipc python testbench/examples/python/01_read_inputs.py
-uv run --extra ipc python testbench/examples/python/02_toggle_output.py USB_EMPTY
+uv run --extra ipc python testbench/io_hub/examples/python/01_read_inputs.py
+uv run --extra ipc python testbench/io_hub/examples/python/02_toggle_output.py USB_EMPTY
 ```
 
 Both scripts accept an optional config path as their last argument (default:
@@ -87,7 +87,7 @@ Both scripts accept an optional config path as their last argument (default:
   `(mask, value)` pair with `TestbenchLabels.build_coil_request()`, writes it with
   `set_coils_mask()`, reads back to confirm.
 
-Full Python API reference: `testbench/client/python/testbench_client.py` (doc
+Full Python API reference: `testbench/io_hub/client/python/testbench_client.py` (doc
 comments on `TestbenchClient` and `TestbenchLabels`).
 
 ## Picking a label to experiment with

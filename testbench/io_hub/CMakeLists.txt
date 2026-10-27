@@ -9,7 +9,7 @@ endif()
 
 # Standalone host-native build. Never add_subdirectory()'d from the repo-root
 # CMakeLists.txt, which forces an ARM cross-toolchain before project().
-set(TB_THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty")
+set(TB_THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty")
 
 find_package(Threads REQUIRED)
 

@@ -7,13 +7,13 @@ over IPC -- the same split testbench_client.h's C API uses (see
 examples/c/02_toggle_output.c for the C equivalent).
 
 Prerequisites:
-    - a testbench daemon must already be running, e.g. from testbench/:
-          ./build/testbench --config testbench.toml
+    - a testbench daemon must already be running, e.g. from testbench/io_hub/:
+          ./build/testbench --config ../testbench.toml
     - the optional `pynng` dependency, from the repo root:
           uv sync --extra ipc
 
 Usage (from the repo root):
-    uv run --extra ipc python testbench/examples/python/01_read_inputs.py [path/to/testbench.toml]
+    uv run --extra ipc python testbench/io_hub/examples/python/01_read_inputs.py [path/to/testbench.toml]
 
     If no config path is given, defaults to testbench/testbench.toml.
 """
@@ -28,7 +28,7 @@ from testbench_client import TestbenchClient, TestbenchIpcError, TestbenchLabels
 
 
 def main() -> int:
-    config_path = sys.argv[1] if len(sys.argv) > 1 else str(Path(__file__).resolve().parents[2] / "testbench.toml")
+    config_path = sys.argv[1] if len(sys.argv) > 1 else str(Path(__file__).resolve().parents[3] / "testbench.toml")
     labels = TestbenchLabels.load(config_path)
 
     try:

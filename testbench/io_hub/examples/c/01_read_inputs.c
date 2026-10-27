@@ -6,12 +6,12 @@
  * 02_toggle_output.c for an example that also resolves label names from
  * testbench.toml, the way a real application should.
  *
- * Build & run (from testbench/):
+ * Build & run (from testbench/io_hub/):
  *   mkdir -p build && cd build && cmake .. && cmake --build . --target example_read_inputs
  *   ./example_read_inputs
  *
  * Prerequisite: a testbench daemon must already be running, e.g.:
- *   ./testbench --config ../testbench.toml
+ *   ./testbench --config ../../testbench.toml
  */
 #include <stdbool.h>
 #include <stdint.h>

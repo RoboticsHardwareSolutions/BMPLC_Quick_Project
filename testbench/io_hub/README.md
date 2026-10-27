@@ -35,9 +35,9 @@ cmake ..
 cmake --build . --target testbench
 ```
 
-This is a **standalone, host-native** build — `testbench/CMakeLists.txt` is never
+This is a **standalone, host-native** build — `testbench/io_hub/CMakeLists.txt` is never
 `add_subdirectory()`'d from the repo-root build (which forces an ARM cross-toolchain
-before `project()`). It pulls in three git submodules under `../thirdparty/` that
+before `project()`). It pulls in three git submodules under `../../thirdparty/` that
 belong to this tool specifically:
 
 | Submodule | Used for |
@@ -145,8 +145,8 @@ main poll cycle, which already gets an implicit retry from its next cycle 200ms 
 ## Running as a daemon
 
 ```sh
-./testbench --config ../testbench.toml                 # foreground (default)
-./testbench --config ../testbench.toml -d               # detached, background
+./testbench --config ../../testbench.toml                 # foreground (default)
+./testbench --config ../../testbench.toml -d               # detached, background
 ```
 
 | Flag | Default | Meaning |
@@ -173,12 +173,12 @@ directory.
 ## One-shot CLI
 
 ```sh
-./testbench --config ../testbench.toml --list                        # dump all labels (no I/O)
-./testbench --config ../testbench.toml --read                        # read & decode all inputs
-./testbench --config ../testbench.toml --write USB_EMPTY=1            # set one or more output coils
-./testbench --config ../testbench.toml --write USB_EMPTY=1,PWR_PLC_M=0
-./testbench --config ../testbench.toml --iface                       # presence-check [iface.*] ports
-./testbench --config ../testbench.toml --status                      # requires a running daemon
+./testbench --config ../../testbench.toml --list                        # dump all labels (no I/O)
+./testbench --config ../../testbench.toml --read                        # read & decode all inputs
+./testbench --config ../../testbench.toml --write USB_EMPTY=1            # set one or more output coils
+./testbench --config ../../testbench.toml --write USB_EMPTY=1,PWR_PLC_M=0
+./testbench --config ../../testbench.toml --iface                       # presence-check [iface.*] ports
+./testbench --config ../../testbench.toml --status                      # requires a running daemon
 ```
 
 `--read`/`--write`/`--status` are **daemon-aware**: if a `testbench` daemon is already
@@ -200,7 +200,7 @@ presence-only, never opens the device).
 ## Web control panel
 
 ```sh
-./testbench --config ../testbench.toml   # then open http://localhost:8080/
+./testbench --config ../../testbench.toml   # then open http://localhost:8080/
 ```
 
 Static files in `web/` (`index.html`/`style.css`/`app.js`, plain files on disk —
@@ -252,7 +252,7 @@ label-resolving example per language, all verified against real hardware.
   (macOS)" above for how to (re-)derive the right value.
 - **`nng_req0_open`/`nng_rep0_open` aborts with an `assert` panic:** the `nng`
   submodule drifted off the pinned `v1.x` tag onto an unstable pre-release commit —
-  `cd ../thirdparty/nng && git checkout v1.12.5` (or whatever the current pin is).
+  `cd ../../thirdparty/nng && git checkout v1.12.5` (or whatever the current pin is).
 - **Occasional single "Invalid CRC" / transient read-write failure from the CLI:**
   normal RS485 bus noise, especially right after (re)connecting cables — covered by
   `retries` (see Configuration above); the daemon's own poll loop self-heals within

@@ -5,14 +5,14 @@
  * to parse testbench.toml and resolve a label name to a bit position -- exactly what
  * testbench_client.py's TestbenchLabels does on the Python side, and the approach a
  * real application should take, since the wire protocol itself is deliberately
- * label-free (see testbench/include/testbench_proto.h).
+ * label-free (see testbench/io_hub/include/testbench_proto.h).
  *
- * Build & run (from testbench/):
+ * Build & run (from testbench/io_hub/):
  *   mkdir -p build && cd build && cmake .. && cmake --build . --target example_toggle_output
- *   ./example_toggle_output USB_EMPTY ../testbench.toml
+ *   ./example_toggle_output USB_EMPTY ../../testbench.toml
  *
  * Prerequisite: a testbench daemon must already be running, e.g.:
- *   ./testbench --config ../testbench.toml
+ *   ./testbench --config ../../testbench.toml
  */
 #include <stdbool.h>
 #include <stdint.h>

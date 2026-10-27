@@ -1,8 +1,8 @@
 """Low-latency Python client for the testbench daemon's NNG IPC API.
 
-Mirrors testbench/client/c/testbench_client.h. Label names are resolved locally from
-testbench.toml (the same file the daemon reads) -- only bit positions/addresses ever
-go over the wire, matching testbench/include/testbench_proto.h exactly.
+Mirrors testbench/io_hub/client/c/testbench_client.h. Label names are resolved locally
+from testbench.toml (the same file the daemon reads) -- only bit positions/addresses
+ever go over the wire, matching testbench/io_hub/include/testbench_proto.h exactly.
 
 Requires the optional `pynng` dependency (not installed by default -- see
 pyproject.toml's `ipc` extra: `uv sync --extra ipc`), since it's only needed by code
@@ -127,9 +127,9 @@ class TestbenchClient:
 @dataclass(frozen=True)
 class TestbenchLabels:
     """Label <-> address maps parsed straight from testbench.toml, mirroring
-    testbench/src/config.c's semantics -- including deriving the output coil span from
-    the label table itself (io.map.outputs.start_address/count are parsed upstream but
-    never actually used for addressing, same as today's testbench/io.py)."""
+    testbench/io_hub/src/config.c's semantics -- including deriving the output coil
+    span from the label table itself (io.map.outputs.start_address/count are parsed
+    upstream but never actually used for addressing, same as today's testbench/io.py)."""
 
     input_bit: dict
     output_addr: dict

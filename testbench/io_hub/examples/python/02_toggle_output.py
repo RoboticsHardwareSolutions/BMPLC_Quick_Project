@@ -8,10 +8,10 @@ locally from testbench.toml by TestbenchLabels (see testbench_client.py).
 Prerequisites: same as 01_read_inputs.py.
 
 Usage (from the repo root):
-    uv run --extra ipc python testbench/examples/python/02_toggle_output.py LABEL [path/to/testbench.toml]
+    uv run --extra ipc python testbench/io_hub/examples/python/02_toggle_output.py LABEL [path/to/testbench.toml]
 
 Example:
-    uv run --extra ipc python testbench/examples/python/02_toggle_output.py USB_EMPTY
+    uv run --extra ipc python testbench/io_hub/examples/python/02_toggle_output.py USB_EMPTY
 """
 
 import sys
@@ -28,7 +28,7 @@ def main() -> int:
         return 2
 
     label = sys.argv[1]
-    config_path = sys.argv[2] if len(sys.argv) > 2 else str(Path(__file__).resolve().parents[2] / "testbench.toml")
+    config_path = sys.argv[2] if len(sys.argv) > 2 else str(Path(__file__).resolve().parents[3] / "testbench.toml")
     labels = TestbenchLabels.load(config_path)
 
     if label not in labels.output_addr:

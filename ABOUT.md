@@ -33,25 +33,6 @@ cmake --build .
 - Device tests are only compiled in Debug or when registered with `test(fn SELFTEST)` (see `thirdparty/rhs/cmake/rhs.cmake`).
 - Compiler flags/includes for analysis or IDE setup: `build/compile_commands.json` (or `cmake-build-debug/`).
 
-## Flashing and Running Tests on Hardware
-
-Two parallel test mechanisms exist — pick based on what's being tested:
-
-**1. RTT CLI device tests** — self-contained, run entirely on-device via the RTT command line. Uses `bmlab-toolkit` (`pip install bmlab-toolkit`). MCU names: `STM32F103RE` (M), `STM32F765ZG` (L/XL).
-
-```sh
-bml flash build_m/bmplc.bin --serial <JLINK_SERIAL> --mcu STM32F103RE
-bml rtt   --serial <JLINK_SERIAL> --mcu STM32F103RE -t 30 --msg "?"          # list RTT CLI commands
-bml rtt   --serial <JLINK_SERIAL> --mcu STM32F103RE -t 10 --no-reset --msg "memmng_test"
-```
-
-- List commands with `?` (device test names end in `_test`, e.g. `memmng_test`, `records_test`, `eeprom_test`).
-- A test passes if its output contains a final `REPORT` line with `Failures: 0`.
-- CI (`.github/workflows/unit_tests.yml`) builds `BMPLC_M`, `BMPLC_XL`, `G0B1` on self-hosted runners; only M and XL are flashed and have their `_test` commands run this way (G0B1 is build-only).
-
-**2. Python HIL testbench (pytest)** — for tests needing external I/O (a testbench hub toggling the PLC's physical inputs/outputs over Modbus RTU), not just on-device logic. Root `conftest.py` provides session fixtures (`io_config`, `testbench`, `plc`) consumed by `user_tests/<name>/testbench/*_test.py` (e.g. `user_tests/io_test/testbench/io_test.py`, paired with the on-device `user_tests/io_test/target/io_test.c`). Config in `testbench/testbench.toml`; drivers in `testbench/{io,rtt,iface}.py`; `testbench/cli.py` is a standalone manual tool for poking testbench outputs. Configured via env vars: `PLC_TYPE`, `JLINK_SERIAL`, `MCU`, `IO_TEST_CONFIG`, `IO_TEST_BIN`, `IO_TEST_NO_POWER`. Nothing hardware-related happens at import/collection time, so a plain `pytest` without hardware/env vars set just skips these. Python deps managed with `uv` (`pyproject.toml`); Python ≥ 3.14 required (uses `tomllib`).
-- VSCode: J-Link launch/attach configs + RTT Viewer tab (see `.vscode/launch.json`); `JLinkRTTClient` works standalone. Remote debugging via `JLinkRemoteServer` (see README.md). BlackMagic Probe configs are also available.
-
 ### RTT CLI commands
 `?`, `uptime`, `free`, `log`, `reset`, `uid`, `top`, `can_open` (filter/send CAN frames), `usb_bridge` (`-rs232`/`-rs485`), `mem_test`, `log_save_test`, plus all registered device tests.
 
@@ -81,9 +62,9 @@ Toolchain files (`toolchains/plc_{m,l,xl}.cmake`, `g0b1.cmake`) set `RHS_HAL_*` 
 - `core/` — board glue: per-family HAL conf/MSP/system files under `core/inc|src/{f1,f7,g0}`, `syscalls.c`/`sysmem.c`, `FreeRTOSConfig.h`. See `core/README.md`.
 - `thirdparty/rhs/` — the RHS framework: `core/` (threads, records, queues/mutexes/semaphores/event flags — static FreeRTOS wrappers; log; memmgr), `hal/` (one module per peripheral, each with its own CMakeLists), `applications/services/` (cli, loader, net + backends, can_open, notification, usb_serial_bridge).
 - `user_apps/` — application services (currently: `cdc_net_hello_rhs`, `eth_net_hello_rhs`).
-- `user_tests/` — device-side tests (currently: `memmng_test`, `records_test`, `eeprom_test`, `io_test`, `flash_ex_test`); `io_test` also has a paired pytest HIL test under `testbench/`.
+- `user_tests/` — device-side tests (currently: `memmng_test`, `records_test`, `eeprom_test`, `io_test`, `flash_ex_test`); `io_test` also has a paired HIL test under `testbench/`.
 - `thirdparty/` also holds freertos, mongoose, tinyusb, co_stack (CANopen), rcan/rserial/rtimer/runit, RTT — external libraries.
-- `testbench/` — Python (uv) HIL testbench driving the board over serial/Modbus; config in `testbench/testbench.toml`.
+- `testbench/` — umbrella directory for the HIL rig: `testbench/io_hub/` (C daemon driving the board's I/O over Modbus RTU) and `testbench/jlinktool/` (J-Link SDK flash/RTT utility, see its `REQUIREMENTS.md`).
 
 ## Creating a New Application
 1. Create a new folder (e.g. `user_apps/new_app/`) with a `CMakeLists.txt`:
@@ -128,5 +109,4 @@ Alternative manual pattern (README.md): register a CLI command via `cli_add_comm
 - `thirdparty/rhs/cmake/rhs.cmake` — `service()`/`start_up()`/`test()` registration; generates `applications.c`.
 - `core/README.md` — board glue file map.
 - `.github/workflows/unit_tests.yml` — CI: build all targets, then flash + run all `*_test` RTT commands for M and XL.
-- `conftest.py` — root pytest fixtures for the HIL testbench harness.
 - Linker scripts: `STM32F103RETX_FLASH.ld`, `STM32F765ZGTX_FLASH.ld`, `STM32G0B1KCUX_FLASH.ld`; SVD files for IDEs.

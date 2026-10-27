@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 /* Low-latency C client for the testbench daemon's NNG REQ/REP IPC API
- * (testbench/include/testbench_proto.h). Connects to an already-running daemon;
- * does not touch the serial port itself.
+ * (testbench/io_hub/include/testbench_proto.h). Connects to an already-running
+ * daemon; does not touch the serial port itself.
  *
  * Label names are NOT part of this API -- resolve them against your own parse of
  * testbench.toml (same file the daemon reads) and work in bit positions /

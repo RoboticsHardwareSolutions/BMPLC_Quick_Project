@@ -53,8 +53,8 @@ static const char* make_absolute(char* buf, size_t cap, const char* path)
  * so a root_dir that doesn't actually exist silently serves an empty "Index of /"
  * listing instead of failing loudly. The default --web-root ("web") is relative to
  * the CWD, which only happens to contain a "web/" directory when launched from
- * testbench/ -- the far more common `cd build && ./testbench` leaves CWD at
- * testbench/build/, which has no "web/" of its own (it lives one level up).
+ * testbench/io_hub/ -- the far more common `cd build && ./testbench` leaves CWD at
+ * testbench/io_hub/build/, which has no "web/" of its own (it lives one level up).
  *
  * So: only when --web-root was left at its default, if cwd-relative "web" doesn't
  * resolve, fall back to resolving it relative to the executable's own location
