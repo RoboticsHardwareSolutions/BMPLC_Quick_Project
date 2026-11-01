@@ -203,7 +203,10 @@ subfolders:
   See `user_tests/io_test/target/io_test.c` for the reference implementation (an `io`
   RTT command to read `IN0-4` and drive `OUT0-4`/`KEY0-4`).
 - `testbench/<name>.py` — the host-side `pytest` test. See
-  `user_tests/io_test/testbench/io_test.py` for a complete worked example.
+  `user_tests/io_test/testbench/io_test.py` for a complete worked example;
+  `user_tests/exti_test/` is the same pattern applied to hardware interrupts —
+  it counts EXTI edges on `IN0-4` (via the `exti` RTT command) instead of
+  polling levels, proving the EXTI routing/NVIC/mask path per pin.
 
 **One-time setup:**
 - `uv sync` from the repo root (installs `pytest`, `bmlab-toolkit`, `pynng`).

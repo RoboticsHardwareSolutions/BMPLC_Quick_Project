@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.24)
+project(exti_srv C)
+set(CMAKE_C_STANDARD 11)
+
+add_library(${PROJECT_NAME} STATIC target/exti_test.c)
+
+target_include_directories(
+        ${PROJECT_NAME} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+target_link_libraries(
+        ${PROJECT_NAME}
+        PRIVATE
+        rhs_hal
+        cli
+)
+
+test(rhs_exti_test "rhs_exti_test" )

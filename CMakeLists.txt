@@ -42,6 +42,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMENT "Building ${HEX_FILE}
 Building ${BIN_FILE}")
 
+
 add_subdirectory(thirdparty)
 add_subdirectory(user_apps)
 add_subdirectory(user_tests)

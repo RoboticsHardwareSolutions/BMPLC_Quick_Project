@@ -30,6 +30,10 @@ RTT_POLL_S = 0.01
 
 _INPUT_LINE_RE = re.compile(r"IN(\d+):\s*(HIGH|LOW)")
 
+# `exti`'s output lines ("  IN0: 3") -- distinct from _INPUT_LINE_RE's HIGH/LOW,
+# so a stale `io` response in the buffer can't be misparsed as a count.
+_EXTI_COUNT_LINE_RE = re.compile(r"IN(\d+):\s*(\d+)")
+
 
 class PlcRttError(RuntimeError):
     """Raised when the firmware's RTT response doesn't confirm a requested IO change."""
@@ -79,6 +83,19 @@ class PlcRtt:
         for n, state in _INPUT_LINE_RE.findall(text):
             states[int(n)] = state == "HIGH"
         return states
+
+    def read_exti_counts(self, timeout: float = 5.0) -> dict[int, int]:
+        """Returns {0: count, ...} for IN0..IN4, parsed from `exti`'s output
+        (user_tests/exti_test/target/exti_test.c).
+
+        Takes the LAST match per pin number, since a stale previous response can
+        still be sitting in the RTT buffer ahead of the one just requested.
+        """
+        text = self.run("exti", timeout=timeout)
+        counts: dict[int, int] = {}
+        for n, value in _EXTI_COUNT_LINE_RE.findall(text):
+            counts[int(n)] = int(value)
+        return counts
 
     def set_out(self, n: int, on: bool, timeout: float = 5.0) -> None:
         state = "on" if on else "off"

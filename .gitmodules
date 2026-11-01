@@ -61,3 +61,6 @@
 [submodule "thirdparty/nng"]
 	path = thirdparty/nng
 	url = https://github.com/nanomsg/nng.git
+[submodule "thirdparty/rlibhelper"]
+	path = thirdparty/rlibhelper
+	url = https://github.com/RoboticsHardwareSolutions/rlibhelper.git
