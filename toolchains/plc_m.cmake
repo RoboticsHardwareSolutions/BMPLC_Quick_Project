@@ -67,12 +67,12 @@ add_link_options(-T ${LINKER_SCRIPT})
 add_definitions(-DBMPLC_M)
 
 ## set HAL
-set(RHS_HAL_IO ON)
+set(RHS_BSP_IO ON)
 
 ## set DRIVERS
 set(RHS_DRIVER_EEPROM ON)
 set(RHS_DRIVER_IO ON)
-set(RHS_HAL_IO ON)
+set(RHS_BSP_IO ON)
 
 ## set SERVICES
 set(RHS_SERVICE_NOTIFICATION ON)

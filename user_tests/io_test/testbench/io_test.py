@@ -72,7 +72,7 @@ def pytest_generate_tests(metafunc):
         return
 
     short = _short_from_env()
-    config_path = os.environ.get("IO_TEST_CONFIG", str(DEFAULT_CONFIG_PATH))
+    config_path = os.environ.get("TESTBENCH_CONFIG", str(DEFAULT_CONFIG_PATH))
     labels = _load_labels(config_path)
     kind = {"test_input": "IN", "test_output": "OUT", "test_key": "KEY"}[metafunc.function.__name__]
     pins = _pins_for(labels, short, kind)

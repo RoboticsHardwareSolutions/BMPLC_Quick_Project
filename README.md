@@ -226,7 +226,7 @@ subfolders:
 | `tb_client` | session | `TestbenchClient` — IPC read/write of the bench's Modbus coils/bits |
 | `tb_labels` | session | `TestbenchLabels` — label ⟷ bit/coil address lookup from `testbench.toml` |
 | `plc_power` | module | powers on + USB-enables the PLC under test before your tests, off after |
-| `plc` | module | flashes (if `IO_TEST_BIN` set) + connects RTT, yields a `PlcRtt` (`run`/`read_inputs`/`set_out`/`set_key`); resets pins + disconnects after |
+| `plc` | module | flashes (if `PLC_BIN` set) + connects RTT, yields a `PlcRtt` (`run`/`read_inputs`/`set_out`/`set_key`); resets pins + disconnects after |
 
 Never talk to the bench or the daemon any other way (no shelling out to the
 `testbench` CLI, no raw Modbus) — `tb_client`/`tb_labels` are the only supported
@@ -259,11 +259,36 @@ fixtures, so pin discovery there is done again, independently, at collection tim
 uv run pytest
 
 # a real run against hardware
-PLC_TYPE=BMPLC_M IO_TEST_BIN=cmake-build-debug/bmplc.bin \
+PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \
   uv run pytest user_tests/io_test/testbench/ -v
 ```
 Env vars: `PLC_TYPE` (`BMPLC_M`|`BMPLC_XL`, required), `JLINK_SERIAL`/`MCU` (override
 `testbench.toml`'s `[targets.*]`, needed when the toml only has a placeholder),
-`IO_TEST_BIN` (firmware to flash first; omit to test whatever's already on the
-board), `IO_TEST_CONFIG` (alternate `testbench.toml` path), `IO_TEST_NO_POWER` (skip
+`PLC_BIN` (firmware to flash first; omit to test whatever's already on the
+board), `TESTBENCH_CONFIG` (alternate `testbench.toml` path), `PLC_NO_POWER` (skip
 the power-on/off step, e.g. if the board is already powered some other way).
+
+### Running on-target unit tests via pytest
+The device tests registered with the `runit` pass/fail framework (above) —
+`user_tests/{eeprom_test,memmng_test,records_test,flash_ex_test}/`, exposed as RTT CLI
+commands like `mem_test`/`eeprom_test` — are also run by
+`.github/workflows/unit_tests.yml` in CI via a `bml rtt` bash script. `user_tests/
+unit_test/testbench/unit_test.py` is the local-pytest equivalent of that same CI
+step, reusing the HIL harness's `plc` fixture (flash + RTT) instead of shelling out
+to `bml`: it sends `?` over RTT, discovers every CLI command whose name contains
+`_test`, runs each, and asserts each one's `runit_report()` line shows zero
+failures. There's no `target/unit_test.c` here — the on-target test bodies already
+exist in the four folders above; this file only adds the host-side discovery/run
+step across all of them at once.
+
+This requires a **Debug** build: `test()`'s CMake gate
+(`thirdparty/rhs/cmake/rhs.cmake`) only compiles `*_test` commands into
+`CMAKE_BUILD_TYPE=Debug` binaries, so flashing a Release build will make `?` return
+zero `_test` commands — the test fails loudly in that case rather than reporting a
+meaningless "0 ran, 0 failed" pass.
+
+```sh
+PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \
+  uv run pytest user_tests/unit_test/testbench/ -v
+```
+Same env vars and fixtures as the HIL tests above.

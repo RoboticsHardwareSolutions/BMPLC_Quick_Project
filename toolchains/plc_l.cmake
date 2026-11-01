@@ -67,7 +67,7 @@ add_definitions(-DBMPLC_L)
 
 ## set HAL
 set(RHS_HAL_FLASH_EX ON)
-set(RHS_HAL_IO ON)
+set(RHS_BSP_IO ON)
 set(RHS_HAL_RTC ON)
 set(RHS_HAL_SERIAL ON)
 set(RHS_HAL_SPEAKER ON)

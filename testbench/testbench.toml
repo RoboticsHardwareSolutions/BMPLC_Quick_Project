@@ -5,7 +5,7 @@
 
 [targets.plc_xl]
     mcu = "STM32F765ZG"
-    jlink_serial = "..."
+    jlink_serial = "772440171"
 
 
 [io.connection]

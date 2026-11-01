@@ -108,7 +108,7 @@ def io_config() -> IoConfig:
         pytest.fail(f"PLC_TYPE={plc_type!r} is not one of {sorted(_TARGETS)}")
     target_key, short = _TARGETS[plc_type]
 
-    config_path = Path(os.environ.get("IO_TEST_CONFIG", DEFAULT_CONFIG_PATH))
+    config_path = Path(os.environ.get("TESTBENCH_CONFIG", DEFAULT_CONFIG_PATH))
     with open(config_path, "rb") as f:
         toml = tomllib.load(f)
     target = toml.get("targets", {}).get(target_key, {})
@@ -128,7 +128,7 @@ def io_config() -> IoConfig:
     if not mcu:
         pytest.fail(f"no MCU name for {target_key}: set MCU, or fill in testbench.toml's [targets.{target_key}].mcu")
 
-    bin_env = os.environ.get("IO_TEST_BIN")
+    bin_env = os.environ.get("PLC_BIN")
     bin_path = Path(bin_env) if bin_env else None
 
     return IoConfig(
@@ -139,7 +139,7 @@ def io_config() -> IoConfig:
         mcu=mcu,
         config_path=config_path,
         bin_path=bin_path,
-        no_power=_env_truthy("IO_TEST_NO_POWER"),
+        no_power=_env_truthy("PLC_NO_POWER"),
     )
 
 
