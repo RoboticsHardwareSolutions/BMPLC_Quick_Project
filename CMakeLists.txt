@@ -4,18 +4,16 @@ cmake_minimum_required(VERSION 3.24)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(PLC_TYPE "BMPLC_M" CACHE STRING "Choose BMPLC_TYPE (BMPLC_M or BMPLC_L or BMPLC_XL)")
+set(PLC_TYPE "BMPLC_M" CACHE STRING "Choose BMPLC_TYPE (BMPLC_M or BMPLC_XL)")
 
 if(PLC_TYPE MATCHES "BMPLC_XL")
     set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchains/plc_xl.cmake CACHE STRING "Toolchain file")
-elseif(PLC_TYPE MATCHES "BMPLC_L")
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchains/plc_l.cmake CACHE STRING "Toolchain file")
 elseif(PLC_TYPE MATCHES "BMPLC_M")
     set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchains/plc_m.cmake CACHE STRING "Toolchain file")
 elseif(PLC_TYPE MATCHES "G0B1")
     set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/toolchains/g0b1.cmake CACHE STRING "Toolchain file")
 else()
-    message(FATAL_ERROR "Invalid PLC_TYPE: ${PLC_TYPE}. Please choose BMPLC_M, BMPLC_L, or BMPLC_XL. Or create a custom toolchain file and set CMAKE_TOOLCHAIN_FILE to point to it.")
+    message(FATAL_ERROR "Invalid PLC_TYPE: ${PLC_TYPE}. Please choose BMPLC_M or BMPLC_XL. Or create a custom toolchain file and set CMAKE_TOOLCHAIN_FILE to point to it.")
 endif()
 
 # project settings

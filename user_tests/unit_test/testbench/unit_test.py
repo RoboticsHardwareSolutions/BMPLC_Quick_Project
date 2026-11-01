@@ -14,10 +14,11 @@ registers the command "mem_test", so there's no static 1:1 mapping to drive
 per-command pytest.mark.parametrize from).
 
 Requires a Debug (or SELFTEST-registered) build: `test()`'s CMake gate
-(thirdparty/rhs/cmake/rhs.cmake) only compiles *_test CLI commands into
-non-Release builds, so a Release/RelWithDebInfo flash will show zero _test
-commands over '?' -- this module fails loudly in that case rather than
-reporting a silent, meaningless "0 ran, 0 failed" pass.
+(thirdparty/rhs/cmake/rhs.cmake) only compiles *_test CLI commands in when
+CMAKE_BUILD_TYPE is exactly "Debug" (or SELFTEST is passed) -- any other
+build type (Release, RelWithDebInfo, ...) will show zero _test commands
+over '?' -- this module fails loudly in that case rather than reporting a
+silent, meaningless "0 ran, 0 failed" pass.
 
 Run against hardware with, e.g.:
     PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \

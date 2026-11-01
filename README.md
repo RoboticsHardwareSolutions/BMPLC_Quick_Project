@@ -2,7 +2,6 @@
 
 ## Hardware
 - [BMPLC_M](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-M)
-- [BMPLC_L](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-L)
 - [BMPLC_XL](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-XL)
 - [User Documentation](https://roboticshardwaresolutions.github.io/BareMetal-PLCs-Vault/)
 
@@ -23,7 +22,7 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_P
 **Steps:**
 - Open project in VSCode
 - Install all recommended extensions
-- In root cmake file, set the `BMPLC_M` (by default), `BMPLC_L`, or `BMPLC_XL` variable to the desired hardware
+- In root cmake file, set the `BMPLC_M` (by default) or `BMPLC_XL` variable to the desired hardware
 - Build cmake project
 - Plug in the BMPLC to your computer by USB
 - Start debugging ![alt text](/documentation/images/debug_vscode.png)
@@ -36,9 +35,9 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_P
 If you need to debug a target device that is not directly connected to your computer, you can use the remote debugging options. Make sure the target device is properly configured for remote debugging and accessible over the network:
 On remote system, run the J-Link GDB Server with the appropriate parameters to allow remote connections.
 ```sh
-./JLinkRemoteServer -nogui -select usb=772440171 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
+./JLinkRemoteServer -nogui -select usb=772440172 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
 ```
-Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_L and BMPLC_XL.
+Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_XL.
 
 Then, in VSCode, select the "Launch Remote jlink" or "Attach Remote jlink" option and provide the necessary connection details (IP address and port number) to connect to the remote J-Link GDB Server.
 

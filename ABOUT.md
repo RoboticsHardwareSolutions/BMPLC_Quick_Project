@@ -9,7 +9,6 @@ BMPLC (Bare Metal PLC) firmware for Robotics Hardware Solutions' bare-metal PLC 
 | Target | MCU | Core | Notes |
 |---|---|---|---|
 | `BMPLC_M` (default) | STM32F103RE | Cortex-M3, 72 MHz | USB (TinyUSB), CANopen, EEPROM |
-| `BMPLC_L` | STM32F765ZG | Cortex-M7 | Shares F7 code with XL |
 | `BMPLC_XL` | STM32F765ZG | Cortex-M7, 216 MHz (overdrive) | Ethernet, QSPI flash, RTC, speaker |
 | `G0B1` | STM32G0B1 | Cortex-M0+ | `toolchains/g0b1.cmake`; built in CI but not flashed/tested |
 
@@ -23,7 +22,7 @@ Requirements: cmake ≥ 3.24, `arm-none-eabi-gcc`, recursive submodules (`git cl
 
 ```sh
 mkdir build_m && cd build_m
-cmake -DPLC_TYPE=BMPLC_M -DCMAKE_BUILD_TYPE=Debug ..   # PLC_TYPE: BMPLC_M | BMPLC_L | BMPLC_XL | G0B1
+cmake -DPLC_TYPE=BMPLC_M -DCMAKE_BUILD_TYPE=Debug ..   # PLC_TYPE: BMPLC_M | BMPLC_XL | G0B1
 cmake --build .
 ```
 
