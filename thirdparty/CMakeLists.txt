@@ -1,3 +1,7 @@
+add_subdirectory(rlibhelper)
+# Subprojects reference ${rlibhelper_SOURCE_DIR}/format.cmake; FetchContent would set it, but rlibhelper is vendored locally
+set(rlibhelper_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rlibhelper)
+
 ####################### FREERTOS lib ############################
 add_library(freertos_config INTERFACE)
 
@@ -129,6 +133,7 @@ if(RHS_APPLICATION_ETH_NET OR RHS_APPLICATION_USB_CDC_NET)
 endif()
 
 ####################### RHS lib ############################
+
 add_subdirectory(rhs)
 add_subdirectory(runit)
 add_subdirectory(rcan)

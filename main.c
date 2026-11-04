@@ -1,7 +1,7 @@
 #include "rhs.h"
 #include "rhs_hal.h"
 
-#if defined(BMPLC_XL) || defined(BMPLC_L)
+#if defined(BMPLC_XL)
 #    include "stm32f7xx_hal.h"
 #elif defined(BMPLC_M)
 #    include "stm32f1xx_hal.h"
@@ -116,7 +116,7 @@ void SystemClock_Config(void)
 }
 #endif
 
-#if defined(BMPLC_XL) || defined(BMPLC_L)
+#if defined(BMPLC_XL)
 
 void SystemClock_Config(void)
 {

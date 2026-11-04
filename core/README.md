@@ -44,5 +44,5 @@ This directory contains low-level project configuration and MCU-family specific 
 - `core/src/g0/system_stm32g0xx.c` - System startup/clock setup and CMSIS system functions for STM32G0.
 
 ## Notes
-- Only one MCU-family set is effectively used in a given firmware build, selected by the project target (`BMPLC_M`, `BMPLC_L`, `BMPLC_XL`) in root CMake configuration.
+- Only one MCU-family set is effectively used in a given firmware build, selected by the project target (`BMPLC_M`, `BMPLC_XL`) in root CMake configuration.
 - Update files in this directory when changing platform-level behavior: clocks, HAL modules, middleware compile-time options, or libc runtime stubs.

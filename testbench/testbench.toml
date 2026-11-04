@@ -1,5 +1,15 @@
+[targets.plc_m]
+    mcu = "STM32F103RE"
+    jlink_serial = "000772440172"
+
+
+[targets.plc_xl]
+    mcu = "STM32F765ZG"
+    jlink_serial = "772440171"
+
+
 [io.connection]
-    port = "/dev/tty.usbserial-21140"
+    usb_location = 0x140000
     inputs_id = 1
     ouputs_id = 2
     baudrate = 115200
@@ -7,8 +17,8 @@
     retries = 3                # Number of repetitions
 
 
-[io.map.inputs]     # Read Holding registers for input states
-    register_type = "holding"  # type: holding, input, discrete, coil
+[io.map.inputs]     # Read Discrete Inputs (FC 0x02) for input states
+    register_type = "discrete"  # type: holding, input, discrete, coil
     start_address = 0          # Start address
     count = 2                  # number of registers (16-bit each, total 32 bits)
 
@@ -31,8 +41,8 @@
         "11" = "PLC_M_KEY0"
         "12" = "PLC_M_KEY1"
         "13" = "PLC_M_KEY2"
-        "14" = "PLC_M_KEY4"
-        "15" = "PLC_M_KEY3"
+        "14" = "PLC_M_KEY3"
+        "15" = "PLC_M_KEY4"
 
 [io.map.outputs] # Write outputs
     register_type = "coil"
@@ -59,13 +69,13 @@
 
 
 [iface.canbus]
-    port = "/dev/tty.usbserial-DN0536AY"
+    usb_location = 0x110000
 
 [iface.rs422]
-    port = "/dev/tty.usbserial-0000D4A3"
+    usb_location = 0x120000
 
 [iface.rs485]
-    port = "/dev/tty.usbserial-00007902"
+    usb_location = 0x130000
 
 [iface.rs232]
-    port = "/dev/tty.usbserial-21230"
+    usb_location = 0x3130000

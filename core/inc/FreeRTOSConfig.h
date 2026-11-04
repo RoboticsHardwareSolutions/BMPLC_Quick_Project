@@ -6,7 +6,7 @@
 extern uint32_t SystemCoreClock;
 #endif
 
-#if defined(BMPLC_XL) || defined(BMPLC_L)
+#if defined(BMPLC_XL)
 #    include "stm32f7xx.h"
 #    ifndef configTOTAL_HEAP_SIZE
 #        define configTOTAL_HEAP_SIZE ((size_t) 64 * 1024)
