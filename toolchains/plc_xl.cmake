@@ -1,109 +1,65 @@
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_C_COMPILER arm-none-eabi-gcc)
-set(CMAKE_CXX_COMPILER arm-none-eabi-g++)
-set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
-set(CMAKE_AR arm-none-eabi-ar)
-set(CMAKE_OBJCOPY arm-none-eabi-objcopy)
-set(CMAKE_OBJDUMP arm-none-eabi-objdump)
-set(SIZE arm-none-eabi-size)
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+# BMPLC_XL: STM32F765ZG, Cortex-M7
+# Selected by PLC_TYPE in the root CMakeLists.txt, common part is in common.cmake
 
-set(CMAKE_EXECUTABLE_SUFFIX_C .elf)
+################################################## Board ##################################################
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-    message(STATUS "Maximum optimization for speed")
-    add_compile_options(-Ofast)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
-    message(STATUS "Maximum optimization for speed, debug info included")
-    add_compile_options(-Ofast -g)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
-    add_compile_options(-g)
-    message(STATUS "Maximum optimization for size")
-    add_compile_options(-Os)
-elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinOptDebInfo")
-    message(STATUS "Maximum optimization for size")
-    add_compile_options(-Og -g)
-else()
-    add_compile_options(-g)
-    message(STATUS "No optimization")
-endif()
-
-#Uncomment for hardware floating point
-add_compile_definitions(ARM_MATH_CM7;ARM_MATH_MATRIX_CHECK;ARM_MATH_ROUNDING)
-add_compile_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
-add_link_options(-mfloat-abi=hard -mfpu=fpv4-sp-d16)
-add_link_options(-Wl,-gc-sections,--print-memory-usage)
-add_link_options(-mcpu=cortex-m7 -mthumb)
-#add_link_options(-T ${LINKER_SCRIPT})
-
-#Uncomment for software floating point
-#add_compile_options(-mfloat-abi=soft)
-
-add_compile_options(-mcpu=cortex-m7 -mthumb)
-add_compile_options(-ffunction-sections -fdata-sections -fno-common -fmessage-length=0)
-
-# uncomment to mitigate c++17 absolute addresses warnings
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
-
-include_directories(
-    core/inc
-    core/inc/f7
-    thirdparty/stm32f7_hal/Inc
-    thirdparty/stm32f7_hal/Inc/Legacy
-    thirdparty/stm32f7_cmsis/Include
-    thirdparty/cmsis/CMSIS/Core/Include
+set(MCU_CPU cortex-m7)
+set(MCU_FPU_FLAGS -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+set(MCU_FAMILY f7)
+set(MCU_STARTUP startup_stm32f765xx.s)
+set(MCU_DEFINES
+    USE_HAL_DRIVER
+    STM32F765xx
+    ARM_MATH_CM7
+    ARM_MATH_MATRIX_CHECK
+    ARM_MATH_ROUNDING
+    BMPLC_XL
 )
+set(LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/STM32F765ZGTX_FLASH.ld)
 
-add_definitions(-DUSE_HAL_DRIVER -DSTM32F765xx)
+set(DEVICE_TYPE "STM32F765ZG")
+set(DEVICE_SVD_FILE "toolchains/STM32F765.svd")
 
-file(GLOB_RECURSE SOURCES "core/src/syscalls.c" "core/src/sysmem.c" "core/src/f7/*.*" "thirdparty/stm32f7_hal/*.*" "thirdparty/stm32f7_cmsis/Source/Templates/gcc/startup_stm32f765xx.s")
-list(FILTER SOURCES EXCLUDE REGEX "_template[.]c$")
-
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32F765ZGTX_FLASH.ld)
-
-add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map)
-add_link_options(-T ${LINKER_SCRIPT})
+include(${CMAKE_CURRENT_LIST_DIR}/common.cmake)
 
 ################################################## RHS configuration ##################################################
 
-add_definitions(-DBMPLC_XL)
-
-## set HAL
-set(RHS_HAL_FLASH_EX ON)
-set(RHS_BSP_IO ON)
-set(RHS_HAL_RTC ON)
-set(RHS_HAL_SERIAL ON)
+## HAL (also enabled by the services that need them)
 set(RHS_HAL_SPEAKER ON)
+set(RHS_HAL_FLASH_EX ON)
+set(RHS_HAL_RTC ON)
+set(RHS_HAL_I2C OFF)
+set(RHS_HAL_SERIAL ON)
 set(RHS_HAL_CAN ON)
 set(RHS_HAL_RANDOM ON)
+set(RHS_HAL_USB OFF)
+set(RHS_HAL_ETH OFF)
 
-## set DRIVERS
-#set(RHS_DRIVER_EEPROM ON)
+## BSP / DRIVERS
+set(RHS_DRIVER_EEPROM OFF)
+set(RHS_BSP_IO ON)
 
-## set SERVICES
+## SERVICES
 set(RHS_SERVICE_NOTIFICATION ON)
+set(RHS_SERVICE_CAN_OPEN OFF)
 set(RHS_SERVICE_USB_SERIAL_BRIDGE ON)
-
-set(RHS_SERVICE_ETH_NET ON)
-set(RHS_ETH_NET_IP "192.168.2.100")
-set(RHS_ETH_NET_GATEWAY "192.168.2.1")
-set(RHS_ETH_NET_NETMASK "255.255.255.0")
 
 set(RHS_SERVICE_USB_CDC_NET ON)
 set(RHS_USB_CDC_NET_IP "192.168.3.100")
 set(RHS_USB_CDC_NET_GATEWAY "192.168.3.1")
 set(RHS_USB_CDC_NET_NETMASK "255.255.255.0")
 
+set(RHS_SERVICE_ETH_NET ON)
+set(RHS_ETH_NET_IP "192.168.2.100")
+set(RHS_ETH_NET_GATEWAY "192.168.2.1")
+set(RHS_ETH_NET_NETMASK "255.255.255.0")
+
 set(RHS_SERVICE_USB_ETH_BRIDGE ON)
 
-## set TESTS
-set(RHS_TEST_MEMMNG ON)
-set(RHS_TEST_FLASH_EX ON)
-set(RHS_TEST_RECORDS ON)
+## TESTS
 set(RHS_TEST_EEPROM OFF)
+set(RHS_TEST_MEMMNG ON)
+set(RHS_TEST_RECORDS ON)
+set(RHS_TEST_FLASH_EX ON)
 set(RHS_TEST_IO ON)
 set(RHS_TEST_EXTI ON)
-
-## set LAUNCHER
-set(DEVICE_TYPE "STM32F765ZG")
-set(DEVICE_SVD_FILE "STM32F765.svd")

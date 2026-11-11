@@ -108,4 +108,4 @@ Alternative manual pattern (README.md): register a CLI command via `cli_add_comm
 - `thirdparty/rhs/cmake/rhs.cmake` — `service()`/`start_up()`/`test()` registration; generates `applications.c`.
 - `core/README.md` — board glue file map.
 - `.github/workflows/unit_tests.yml` — CI: build all targets, then flash + run all `*_test` RTT commands for M and XL.
-- Linker scripts: `STM32F103RETX_FLASH.ld`, `STM32F765ZGTX_FLASH.ld`, `STM32G0B1KCUX_FLASH.ld`; SVD files for IDEs.
+- Board toolchains in `toolchains/`: `plc_m.cmake`, `plc_xl.cmake`, `g0b1.cmake` (board + RHS configuration) on top of `common.cmake`, next to their linker scripts (`*_FLASH.ld`) and SVD files.
