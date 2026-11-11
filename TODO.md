@@ -9,6 +9,7 @@
 - Удалить old_gpio ото всюду после завершения покрытия тестами 
 - RHS_HAL_I2C реализовать через BSP EEPROM других поводов включать I2C нет 
 - set(RHS_TEST_EEPROM OFF) - для XL выключен и не проверен ! 
+- удалить deprecated option из rhs.cmake 
 
 
 
