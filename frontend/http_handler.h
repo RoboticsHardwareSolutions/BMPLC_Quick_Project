@@ -11,6 +11,7 @@
 #    include "usb_eth_bridge.h"
 #endif
 
+#if defined(RHS_BSP_IO)
 static inline void io_relay_write(size_t index, bool on)
 {
     if (index > 4)
@@ -44,6 +45,7 @@ static inline void io_out_write(size_t index, bool on)
     else
         on ? OUT4_ON() : OUT4_OFF();
 }
+#endif
 
 // Appends 'count' boolean values as a JSON array fragment (without brackets),
 // returns the new offset.
@@ -85,7 +87,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 mg_http_reply(c,
                               200,
                               "Content-Type: application/json\r\n",
-                              "{%m:%m, %m:%m, %m:%m}",
+                              "{%m:%m, %m:%m, %m:%m, %m:%s}",
                               MG_ESC("serial"),
                               MG_ESC(uid_str),
                               MG_ESC("bmplcType"),
@@ -97,7 +99,13 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                               MG_ESC("Custom"),
 #endif
                               MG_ESC("version"),
-                              MG_ESC(v_str));
+                              MG_ESC(v_str),
+                              MG_ESC("io"),
+#if defined(RHS_BSP_IO)
+                              "true");
+#else
+                              "false");
+#endif
             }
         }
         else if (mg_match(hm->uri, mg_str("/api/tasks"), NULL))
@@ -215,6 +223,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:%s}", MG_ESC("ok"), "true");
             }
         }
+#if defined(RHS_BSP_IO)
         else if (mg_match(hm->uri, mg_str("/api/io"), NULL))
         {
             if (!mg_strcmp(hm->method, mg_str("GET")))
@@ -298,6 +307,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                               MG_ESC("method not allowed"));
             }
         }
+#endif
         else
         {
             struct mg_http_serve_opts opts = {0};
