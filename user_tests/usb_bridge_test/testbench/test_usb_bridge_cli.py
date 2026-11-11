@@ -36,31 +36,31 @@ def _cases():
 
 
 @pytest.mark.parametrize(("args", "expected"), _cases() or [pytest.param(None, None, marks=pytest.mark.skip("all supported"))])
-def test_unsupported_is_reported(rtt, args: str, expected: tuple[str, str]) -> None:
+def test_unsupported_is_reported(plc, args: str, expected: tuple[str, str]) -> None:
     what, reason = expected
-    out = rtt.run_until(f"usb {args}", "error")
+    out = plc.run_until(f"usb {args}", "error")
     assert f"error: {what}: {reason}" in out, out
-    assert "stopped" in rtt.run_until("usb state", "stopped")
+    assert "stopped" in plc.run_until("usb state", "stopped")
 
 
-def test_unknown_target_and_mode(rtt) -> None:
-    out = rtt.run_until("usb foo", "error")
+def test_unknown_target_and_mode(plc) -> None:
+    out = plc.run_until("usb foo", "error")
     assert "error: unknown target 'foo'" in out, out
-    out = rtt.run_until("usb can bogus", "error")
+    out = plc.run_until("usb can bogus", "error")
     assert "error: unknown mode 'bogus'" in out, out
-    assert "stopped" in rtt.run_until("usb state", "stopped")
+    assert "stopped" in plc.run_until("usb state", "stopped")
 
 
-def test_start_state_stop_and_one_at_a_time(rtt) -> None:
-    out = rtt.run_until("usb rs232 app 19200", "started")
+def test_start_state_stop_and_one_at_a_time(plc) -> None:
+    out = plc.run_until("usb rs232 app 19200", "started")
     assert "started rs232 app" in out, out
     try:
-        state = rtt.run_until("usb state", "app rx")
+        state = plc.run_until("usb state", "app rx")
         assert "rs232 app" in state and "baudrate: 19200" in state, state
-        out = rtt.run_until("usb_bridge_echo can", "error")
+        out = plc.run_until("usb_bridge_echo can", "error")
         assert "another bridge is running" in out, out
-        out = rtt.run_until("usb can app", "error")
+        out = plc.run_until("usb can app", "error")
         assert "error: running, usb stop first" in out, out
     finally:
-        assert "stopped" in rtt.run_until("usb stop", "stopped")
-    assert "stopped" in rtt.run_until("usb state", "stopped")
+        assert "stopped" in plc.run_until("usb stop", "stopped")
+    assert "stopped" in plc.run_until("usb state", "stopped")

@@ -25,10 +25,10 @@ RX_TIMEOUT_S = 2.0
 
 
 @pytest.fixture(scope="module", autouse=True)
-def echo_rs232(rtt) -> Iterator[None]:
-    hw.echo_start(rtt, "rs232")
+def echo_rs232(plc) -> Iterator[None]:
+    hw.echo_start(plc, "rs232")
     yield
-    hw.echo_stop(rtt)
+    hw.echo_stop(plc)
 
 
 @pytest.fixture
@@ -95,7 +95,7 @@ def test_stream_64k(port) -> None:
 
 
 @pytest.mark.parametrize("count", [1, 1000, 20000])
-def test_burst_from_cli_thread(rtt, port, count: int) -> None:
+def test_burst_from_cli_thread(plc, port, count: int) -> None:
     received = bytearray()
 
     def reader() -> None:
@@ -105,7 +105,7 @@ def test_burst_from_cli_thread(rtt, port, count: int) -> None:
 
     thread = threading.Thread(target=reader)
     thread.start()
-    out = rtt.run_until(f"usb_bridge_echo burst {count}", f"sent {count}", timeout=10.0 + count / 1000)
+    out = plc.run_until(f"usb_bridge_echo burst {count}", f"sent {count}", timeout=10.0 + count / 1000)
     thread.join()
     assert f"sent {count}" in out, out
     assert bytes(received) == counter(count)
@@ -115,12 +115,12 @@ def test_burst_from_cli_thread(rtt, port, count: int) -> None:
 # ------------------------------------------------------------------ 4. baudrate from the host
 
 
-def test_host_baudrate_change(rtt, port) -> None:
+def test_host_baudrate_change(plc, port) -> None:
     port.baudrate = 115200
     time.sleep(0.2)
     port.write(b"after baud change")
     assert read_exactly(port, 17, RX_TIMEOUT_S) == b"after baud change"
-    state = rtt.run_until("usb_bridge_echo state", "baudrate")
+    state = plc.run_until("usb_bridge_echo state", "baudrate")
     assert re.search(r"baudrate: 115200\b", state), state
     assert re.search(r"open: 1\b", state), state  # pyserial raises DTR
 
@@ -128,10 +128,10 @@ def test_host_baudrate_change(rtt, port) -> None:
 # ------------------------------------------------------------------ 5. one bridge at a time
 
 
-def test_second_bridge_refused(rtt, port) -> None:
-    out = rtt.run_until("usb can bridge", "error")
+def test_second_bridge_refused(plc, port) -> None:
+    out = plc.run_until("usb can bridge", "error")
     assert "error" in out, out
-    assert "stopped" in rtt.run_until("usb state", "stopped")
+    assert "stopped" in plc.run_until("usb state", "stopped")
     port.write(b"still echo")
     assert read_exactly(port, 10, RX_TIMEOUT_S) == b"still echo"
 
@@ -139,16 +139,16 @@ def test_second_bridge_refused(rtt, port) -> None:
 # ------------------------------------------------------------------ 6. stop and switch target
 
 
-def test_stop_and_switch_target(rtt) -> None:
-    hw.echo_stop(rtt)  # port disappears
-    hw.echo_start(rtt, "can")
+def test_stop_and_switch_target(plc) -> None:
+    hw.echo_stop(plc)  # port disappears
+    hw.echo_start(plc, "can")
     with serial.Serial(hw.PORT, 115200, timeout=0.5) as ser:
         ser.write(b"V\r")
         assert ser.read(6) == b"V1010\r", "CAN target does not answer SLCAN"
-    hw.echo_stop(rtt)
-    hw.echo_start(rtt, "rs485")
+    hw.echo_stop(plc)
+    hw.echo_start(plc, "rs485")
     with serial.Serial(hw.PORT, 9600, timeout=0.05) as ser:
         ser.write(b"rs485")
         assert read_exactly(ser, 5, RX_TIMEOUT_S) == b"rs485"
-    hw.echo_stop(rtt)
-    hw.echo_start(rtt, "rs232")  # back for the module fixture teardown
+    hw.echo_stop(plc)
+    hw.echo_start(plc, "rs232")  # back for the module fixture teardown

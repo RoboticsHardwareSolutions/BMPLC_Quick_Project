@@ -11,9 +11,14 @@ pytest's own yield-fixture finalizer stack, which fires even if a test or anothe
 fixture's setup raised -- no fixture here needs a manual try/except around its own
 cleanup.
 
-Every HIL test module should set `pytestmark = pytest.mark.skipif(not
-os.environ.get("PLC_TYPE"), ...)` so a plain `pytest` run with no hardware attached
-just skips instead of touching anything.
+Two ways to reach a PLC:
+
+    PLC_TYPE=BMPLC_M|BMPLC_XL      HIL stand: the chain above, J-Link and MCU from testbench.toml
+    JLINK_SERIAL=... MCU=...       board on the desk (e.g. G0B1): no io_hub, no coils, `plc` only
+
+PLC_BIN flashes the PLC first in both. Tests that need the stand's I/O wiring (io_test, exti_test) skip without
+PLC_TYPE; tests that only need RTT (unit_test, usb_bridge_test) use `hil_available()` and run on the desk too.
+A plain `pytest` run with no hardware attached just skips instead of touching anything.
 """
 
 from __future__ import annotations
@@ -56,6 +61,7 @@ BIT_POLL_INTERVAL_S = 0.15
 RTT_READY_RETRIES = 3
 RTT_READY_TIMEOUT_S = 10.0
 RTT_READY_RETRY_DELAY_S = 2.0
+RTT_LATE_LOG_S = 1.0  # after the CLI answered, for boot log lines still on their way
 
 _PLACEHOLDER_SERIALS = {"", "..."}
 
@@ -67,14 +73,20 @@ _TARGETS = {
 
 @dataclass(frozen=True)
 class IoConfig:
-    plc_type: str  # "BMPLC_M" | "BMPLC_XL"
-    target_key: str  # "plc_m" | "plc_xl" -- key into testbench.toml [targets.*]
-    short: str  # "M" | "XL" -- label suffix, e.g. PLC_<short>_IN0
+    plc_type: str  # "BMPLC_M" | "BMPLC_XL", "" for a board on the desk
+    target_key: str  # "plc_m" | "plc_xl" -- key into testbench.toml [targets.*], "" on the desk
+    short: str  # "M" | "XL" -- label suffix, e.g. PLC_<short>_IN0, "" on the desk
     serial: int  # J-Link serial number
     mcu: str
     config_path: Path
     bin_path: Path | None
     no_power: bool
+    stand: bool  # True: HIL stand (io_hub powers the PLC), False: board on the desk, J-Link only
+
+
+def hil_available() -> bool:
+    """A PLC to test: the HIL stand (PLC_TYPE) or a board on the desk (JLINK_SERIAL + MCU)."""
+    return bool(os.environ.get("PLC_TYPE") or (os.environ.get("JLINK_SERIAL") and os.environ.get("MCU")))
 
 
 def _env_truthy(name: str) -> bool:
@@ -103,16 +115,37 @@ def _pins_for(labels: TestbenchLabels, short: str, kind: str) -> list[int]:
 @pytest.fixture(scope="session")
 def io_config() -> IoConfig:
     plc_type = os.environ.get("PLC_TYPE")
+    bin_env = os.environ.get("PLC_BIN")
+    bin_path = Path(bin_env) if bin_env else None
+    config_path = Path(os.environ.get("TESTBENCH_CONFIG", DEFAULT_CONFIG_PATH))
+
     if not plc_type:
-        pytest.fail(
-            "PLC_TYPE is not set. HIL tests need hardware: set PLC_TYPE=BMPLC_M or "
-            "BMPLC_XL (and usually JLINK_SERIAL) before running pytest."
+        # Board on the desk: no io_hub, no power coils, the J-Link and MCU come from the environment
+        serial_str, mcu = os.environ.get("JLINK_SERIAL"), os.environ.get("MCU")
+        if not (serial_str and mcu):
+            pytest.fail(
+                "HIL tests need hardware: set PLC_TYPE=BMPLC_M or BMPLC_XL (HIL stand), or JLINK_SERIAL and MCU "
+                "(board on the desk)"
+            )
+        try:
+            serial = int(serial_str, 10)
+        except ValueError:
+            pytest.fail(f"JLINK_SERIAL={serial_str!r} is not an integer")
+        return IoConfig(
+            plc_type="",
+            target_key="",
+            short="",
+            serial=serial,
+            mcu=mcu,
+            config_path=config_path,
+            bin_path=bin_path,
+            no_power=True,
+            stand=False,
         )
     if plc_type not in _TARGETS:
         pytest.fail(f"PLC_TYPE={plc_type!r} is not one of {sorted(_TARGETS)}")
     target_key, short = _TARGETS[plc_type]
 
-    config_path = Path(os.environ.get("TESTBENCH_CONFIG", DEFAULT_CONFIG_PATH))
     with open(config_path, "rb") as f:
         toml = tomllib.load(f)
     target = toml.get("targets", {}).get(target_key, {})
@@ -132,9 +165,6 @@ def io_config() -> IoConfig:
     if not mcu:
         pytest.fail(f"no MCU name for {target_key}: set MCU, or fill in testbench.toml's [targets.{target_key}].mcu")
 
-    bin_env = os.environ.get("PLC_BIN")
-    bin_path = Path(bin_env) if bin_env else None
-
     return IoConfig(
         plc_type=plc_type,
         target_key=target_key,
@@ -144,6 +174,7 @@ def io_config() -> IoConfig:
         config_path=config_path,
         bin_path=bin_path,
         no_power=_env_truthy("PLC_NO_POWER"),
+        stand=True,
     )
 
 
@@ -191,7 +222,14 @@ def tb_labels(io_config: IoConfig) -> TestbenchLabels:
 
 
 @pytest.fixture(scope="module")
-def plc_power(io_config: IoConfig, tb_client: TestbenchClient, tb_labels: TestbenchLabels) -> Iterator[None]:
+def plc_power(io_config: IoConfig, request: pytest.FixtureRequest) -> Iterator[None]:
+    if not io_config.stand:
+        # Board on the desk: powered and connected by hand, no io_hub
+        yield
+        return
+
+    tb_client = request.getfixturevalue("tb_client")
+    tb_labels = request.getfixturevalue("tb_labels")
     pwr, usb = f"PWR_PLC_{io_config.short}", f"USB_PLC_{io_config.short}"
 
     if not io_config.no_power:
@@ -208,7 +246,12 @@ def plc_power(io_config: IoConfig, tb_client: TestbenchClient, tb_labels: Testbe
 
 
 @pytest.fixture(scope="module")
-def plc(io_config: IoConfig, plc_power: None, tb_labels: TestbenchLabels) -> Iterator[PlcRtt]:
+def plc(io_config: IoConfig, plc_power: None, request: pytest.FixtureRequest) -> Iterator[PlcRtt]:
+    """RTT to the PLC (flashed with PLC_BIN first when set), ready when its CLI answers '?'.
+
+    Works on the HIL stand and with a board on the desk: '?' is answered by every firmware, unlike 'io' which only
+    boards with RHS_BSP_IO have."""
+    tb_labels = request.getfixturevalue("tb_labels") if io_config.stand else None
     programmer = JLinkProgrammer(serial=io_config.serial)
 
     try:
@@ -222,17 +265,20 @@ def plc(io_config: IoConfig, plc_power: None, tb_labels: TestbenchLabels) -> Ite
         )
         rtt = PlcRtt(programmer)
 
+        # The boot log comes first (XL brings its network up for a while): wait until the CLI answers
         last = ""
         for _ in range(RTT_READY_RETRIES):
-            last = rtt.run("io", timeout=RTT_READY_TIMEOUT_S)
-            if "Input states:" in last:
+            last = rtt.run_until("?", "Available commands", timeout=RTT_READY_TIMEOUT_S)
+            if "Available commands" in last:
                 break
             time.sleep(RTT_READY_RETRY_DELAY_S)
         else:
             pytest.fail(
-                f"PLC did not respond to 'io' over RTT (serial={io_config.serial} mcu={io_config.mcu}).\n"
+                f"PLC did not respond to '?' over RTT (serial={io_config.serial} mcu={io_config.mcu}).\n"
                 f"Last output:\n{last}"
             )
+        time.sleep(RTT_LATE_LOG_S)
+        rtt.run("")  # drop late boot log lines, so they do not end up in the first test's answer
     except BaseException:
         # Covers pytest.fail()'s Failed too (a BaseException, not Exception) --
         # without this, a setup failure above leaks the JLink connection, which then
@@ -244,15 +290,16 @@ def plc(io_config: IoConfig, plc_power: None, tb_labels: TestbenchLabels) -> Ite
     try:
         yield rtt
     finally:
-        for n in _pins_for(tb_labels, io_config.short, "OUT"):
-            try:
-                rtt.set_out(n, False)
-            except Exception:
-                pass
-        for n in _pins_for(tb_labels, io_config.short, "KEY"):
-            try:
-                rtt.set_key(n, False)
-            except Exception:
-                pass
+        if tb_labels is not None:
+            for n in _pins_for(tb_labels, io_config.short, "OUT"):
+                try:
+                    rtt.set_out(n, False)
+                except Exception:
+                    pass
+            for n in _pins_for(tb_labels, io_config.short, "KEY"):
+                try:
+                    rtt.set_key(n, False)
+                except Exception:
+                    pass
         programmer.stop_rtt()
         programmer.disconnect_target()
