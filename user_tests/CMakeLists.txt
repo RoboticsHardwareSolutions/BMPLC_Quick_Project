@@ -25,3 +25,7 @@ endif()
 if(RHS_TEST_USB_BRIDGE OR RHS_TEST_USB_BRIDGE_APP)
     add_subdirectory(usb_bridge_test)
 endif()
+
+if(RHS_TEST_USB_MOUNT)
+    add_subdirectory(usb_mount_test)
+endif()
