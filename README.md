@@ -2,7 +2,6 @@
 
 ## Hardware
 - [BMPLC_M](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-M)
-- [BMPLC_L](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-L)
 - [BMPLC_XL](https://github.com/RoboticsHardwareSolutions/BareMetal-PLC-XL)
 - [User Documentation](https://roboticshardwaresolutions.github.io/BareMetal-PLCs-Vault/)
 
@@ -23,7 +22,7 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_P
 **Steps:**
 - Open project in VSCode
 - Install all recommended extensions
-- In root cmake file, set the `BMPLC_M` (by default), `BMPLC_L`, or `BMPLC_XL` variable to the desired hardware
+- In root cmake file, set the `BMPLC_M` (by default) or `BMPLC_XL` variable to the desired hardware
 - Build cmake project
 - Plug in the BMPLC to your computer by USB
 - Start debugging ![alt text](/documentation/images/debug_vscode.png)
@@ -36,9 +35,9 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_P
 If you need to debug a target device that is not directly connected to your computer, you can use the remote debugging options. Make sure the target device is properly configured for remote debugging and accessible over the network:
 On remote system, run the J-Link GDB Server with the appropriate parameters to allow remote connections.
 ```sh
-./JLinkRemoteServer -nogui -select usb=772440171 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
+./JLinkRemoteServer -nogui -select usb=772440172 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
 ```
-Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_L and BMPLC_XL.
+Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_XL.
 
 Then, in VSCode, select the "Launch Remote jlink" or "Attach Remote jlink" option and provide the necessary connection details (IP address and port number) to connect to the remote J-Link GDB Server.
 
@@ -188,3 +187,110 @@ void new_test_start_up(void) // This function add callback for your test to CLI
     cli_add_command("new_test", new_test, NULL);
 }
 ```
+
+### Creating HIL tests
+Device tests (above) only exercise on-device logic reachable from the RTT CLI. **HIL
+(Hardware-in-the-Loop) tests** are for anything that needs the physical test bench —
+toggling a PLC's inputs, reading back its outputs/keys, powering a board on/off,
+driving CAN/RS232/RS485/RS422 — via the `testbench/io_hub` daemon, with `pytest`
+driving both the bench and the board (over RTT, via `bmlab-toolkit`) from the host.
+
+**Layout:** each HIL test gets its own folder under `user_tests/<name>/` with two
+subfolders:
+- `target/<name>.c` — the on-device side. Same pattern as "Creating tests" above
+  (register a `cli_add_command` via a `start_up` hook) but typically without the
+  `runit` pass/fail framework, since the bench — not the device — judges pass/fail.
+  See `user_tests/io_test/target/io_test.c` for the reference implementation (an `io`
+  RTT command to read `IN0-4` and drive `OUT0-4`/`KEY0-4`).
+- `testbench/<name>.py` — the host-side `pytest` test. See
+  `user_tests/io_test/testbench/io_test.py` for a complete worked example;
+  `user_tests/exti_test/` is the same pattern applied to hardware interrupts —
+  it counts EXTI edges on `IN0-4` (via the `exti` RTT command) instead of
+  polling levels, proving the EXTI routing/NVIC/mask path per pin.
+
+**One-time setup:**
+- `uv sync` from the repo root (installs `pytest`, `bmlab-toolkit`, `pynng`).
+- SEGGER J-Link software installed (`JLinkExe`/`libjlinkarm` on your `PATH`/library
+  path) — **run any J-Link tool once interactively first** (e.g. `JLinkExe`) and
+  accept whatever activation/firmware-update dialog it shows; `pylink`/`bmlab-toolkit`
+  calls block silently waiting on that same dialog otherwise, which looks exactly
+  like a hang.
+- The bench wired up per `testbench/testbench.toml` (see `testbench/io_hub/README.md`
+  for the Modbus/USB-port layout) and built once: `cmake --build
+  testbench/io_hub/build --target testbench`.
+
+**Fixtures** (root `conftest.py` — read it for full details/scopes):
+
+| Fixture | Scope | Gives you |
+|---|---|---|
+| `io_config` | session | resolved `PLC_TYPE`/`JLINK_SERIAL`/`MCU`/paths from env vars + `testbench.toml` |
+| `io_hub_daemon` | session | the running `io_hub` daemon (started/stopped for you; reused if one's already up) |
+| `tb_client` | session | `TestbenchClient` — IPC read/write of the bench's Modbus coils/bits |
+| `tb_labels` | session | `TestbenchLabels` — label ⟷ bit/coil address lookup from `testbench.toml` |
+| `plc_power` | module | powers on + USB-enables the PLC under test before your tests, off after |
+| `plc` | module | flashes (if `PLC_BIN` set) + connects RTT, yields a `PlcRtt` (`run`/`read_inputs`/`set_out`/`set_key`); resets pins + disconnects after |
+
+Never talk to the bench or the daemon any other way (no shelling out to the
+`testbench` CLI, no raw Modbus) — `tb_client`/`tb_labels` are the only supported
+path, and the daemon is the only process allowed to hold the bench's serial port.
+
+**Minimal example** (`user_tests/<name>/testbench/<name>.py`):
+```python
+import os
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("PLC_TYPE"),
+    reason="HIL tests require hardware: set PLC_TYPE=BMPLC_M|BMPLC_XL",
+)
+
+def test_out0_reaches_bench(plc, tb_client, tb_labels, io_config):
+    plc.set_out(0, True)
+    bits = tb_client.get_inputs()["bits"]
+    assert tb_labels.decode_inputs(bits)[f"PLC_{io_config.short}_OUT0"] is True
+    plc.set_out(0, False)
+```
+For dynamic, per-pin parametrization derived from `testbench.toml` (rather than
+hardcoding pin numbers), see `pytest_generate_tests` in
+`user_tests/io_test/testbench/io_test.py` — `pytest.mark.parametrize` can't read
+fixtures, so pin discovery there is done again, independently, at collection time.
+
+**Running:**
+```sh
+# plain `pytest` with no PLC_TYPE set just collects and skips every HIL test, touching nothing
+uv run pytest
+
+# a real run against hardware
+PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \
+  uv run pytest user_tests/io_test/testbench/ -v
+```
+Env vars: `PLC_TYPE` (`BMPLC_M`|`BMPLC_XL`, required), `JLINK_SERIAL`/`MCU` (override
+`testbench.toml`'s `[targets.*]`, needed when the toml only has a placeholder),
+`PLC_BIN` (firmware to flash first; omit to test whatever's already on the
+board), `TESTBENCH_CONFIG` (alternate `testbench.toml` path), `PLC_NO_POWER` (skip
+the power-on/off step, e.g. if the board is already powered some other way).
+
+### Running on-target unit tests via pytest
+The device tests registered with the `runit` pass/fail framework (above) —
+`user_tests/{eeprom_test,memmng_test,records_test,flash_ex_test}/`, exposed as RTT CLI
+commands like `mem_test`/`eeprom_test` — are also run by
+`.github/workflows/unit_tests.yml` in CI via a `bml rtt` bash script. `user_tests/
+unit_test/testbench/unit_test.py` is the local-pytest equivalent of that same CI
+step, reusing the HIL harness's `plc` fixture (flash + RTT) instead of shelling out
+to `bml`: it sends `?` over RTT, discovers every CLI command whose name contains
+`_test`, runs each, and asserts each one's `runit_report()` line shows zero
+failures. There's no `target/unit_test.c` here — the on-target test bodies already
+exist in the four folders above; this file only adds the host-side discovery/run
+step across all of them at once.
+
+This requires a **Debug** build: `test()`'s CMake gate
+(`thirdparty/rhs/cmake/rhs.cmake`) only compiles `*_test` commands into
+`CMAKE_BUILD_TYPE=Debug` binaries, so flashing a Release build will make `?` return
+zero `_test` commands — the test fails loudly in that case rather than reporting a
+meaningless "0 ran, 0 failed" pass.
+
+```sh
+PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \
+  uv run pytest user_tests/unit_test/testbench/ -v
+```
+Same env vars and fixtures as the HIL tests above.

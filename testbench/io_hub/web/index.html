@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>testbench</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-icon" src="logo.png" alt="" aria-hidden="true" />
+      <span class="brand-name">testbench</span>
+    </div>
+    <div class="status" id="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">connecting…</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card" id="inputs-card">
+      <h2>Inputs</h2>
+      <div class="rows" id="inputs-rows"></div>
+    </section>
+
+    <section class="card" id="outputs-card">
+      <h2>Outputs</h2>
+      <div class="rows" id="outputs-rows"></div>
+    </section>
+
+    <section class="card" id="iface-card">
+      <h2>Interfaces</h2>
+      <div class="badges" id="iface-badges"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-stats"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
