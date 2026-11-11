@@ -38,6 +38,10 @@ from testbench_client import TestbenchClient, TestbenchLabels  # noqa: E402
 sys.path.insert(0, str(REPO_ROOT))
 from testbench.pyhil.daemon import IoHubDaemon, resolve_daemon_binary  # noqa: E402
 from testbench.pyhil.rtt import PlcRtt  # noqa: E402
+from testbench.pyhil.jlink import disable_jlink_dialogs  # noqa: E402
+
+# Unattended HIL host: no J-Link DLL windows waiting for a click
+disable_jlink_dialogs()
 
 DEFAULT_CONFIG_PATH = REPO_ROOT / "testbench" / "testbench.toml"
 
