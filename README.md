@@ -60,6 +60,13 @@ You can use the RTT CLI without vscode by using the `JLinkRTTClient` tool. This 
 - `reset` - resets the system
 - `uid` - shows the unique identifier of the system
 - `top` - shows the top tasks running in the system
+- `can_open`:
+  - `-f <id>`: Add a CAN ID to the filter list
+  - `-e <id>`: Remove a CAN ID from the filter list
+  - `-c`: Clear the filter list
+  - `-l`: List all CAN IDs in the filter list
+  - `-s <id>`: Send a CAN package with the specified ID
+  - `-m`: Show this manual
 - `usb_bridge`:
   - `-rs232`: Add/Remove a USB RS232 bridge
   - `-rs485`: Add/Remove a USB RS485 bridge
@@ -90,7 +97,7 @@ target_link_libraries(
         rhs
         rhs_hal
         RTT
-) # Link against the necessary libraries (serial, can, notification, etc.)
+) # Link against the necessary libraries (serial, can, can_open, notification, etc.)
 
 service(new_app "new_app" 1024)
 ``` 
