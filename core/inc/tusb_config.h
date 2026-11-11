@@ -17,7 +17,7 @@
 #define CFG_TUD_ENABLED 1
 #define CFG_TUD_ENDPOINT0_SIZE 64
 
-#define CFG_TUD_CDC 2
+#define CFG_TUD_CDC 1
 #define CFG_TUD_CDC_NOTIFY 1  // Enable use of notification endpoint
 
 // Network class has 2 drivers: ECM/RNDIS and NCM.

@@ -1,3 +1,6 @@
+# [Unreleased]
+- One USB bridge `usb_bridge` (`RHS_SERVICE_USB_BRIDGE`) to CAN (SLCAN), RS232, RS485 and Ethernet with Bridge / App / Bridge+App modes, replaces the USB serial and USB-Ethernet bridges; CAN on G0B1 (FDCAN1); tests in `user_tests/usb_bridge_test` (`RHS_TEST_USB_BRIDGE`, `RHS_TEST_USB_BRIDGE_APP`)
+
 # [0.1.4] - 2026-09-01
 - Supported USB OTG FS on STM32F7xx series microcontrollers with dual CDC and NCM functionality
 

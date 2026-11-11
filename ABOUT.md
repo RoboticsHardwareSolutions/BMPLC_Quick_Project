@@ -51,15 +51,15 @@ cmake --build .
 So adding a feature = new folder with `CMakeLists.txt` (library + one of the three registration calls) under `user_apps/`, `user_tests/`, or `thirdparty/rhs/applications/services/`.
 
 ### Per-target feature gating
-Toolchain files (`toolchains/plc_{m,l,xl}.cmake`, `g0b1.cmake`) set `RHS_HAL_*` / `RHS_DRIVER_*` / `RHS_SERVICE_*` / `RHS_TEST_*` flags plus `-DBMPLC_M`/`-DBMPLC_XL`. HAL modules are also pulled in **transitively** (`thirdparty/rhs/hal/CMakeLists.txt`), e.g. `RHS_SERVICE_USB_SERIAL_BRIDGE` → `rhs_hal_serial` + `rhs_hal_random`, `RHS_DRIVER_EEPROM` → `rhs_hal_i2c`. Current scope:
+Toolchain files (`toolchains/plc_{m,l,xl}.cmake`, `g0b1.cmake`) set `RHS_HAL_*` / `RHS_DRIVER_*` / `RHS_SERVICE_*` / `RHS_TEST_*` flags plus `-DBMPLC_M`/`-DBMPLC_XL`. HAL modules are also pulled in **transitively** (`thirdparty/rhs/hal/CMakeLists.txt`), e.g. `RHS_SERVICE_USB_BRIDGE` → `rhs_hal_usb` + `rhs_hal_can` + `rhs_hal_random`, `RHS_DRIVER_EEPROM` → `rhs_hal_i2c`. Current scope:
 
 - **XL**: HAL flash_ex (QSPI MT25QL128ABA), io, rtc, serial, speaker, can (bxCAN), random; service `ETH_NET` (mongoose + built-in STM32F7 netif driver).
-- **M**: HAL i2c + EEPROM driver, usb (TinyUSB), serial, can; services `USB_CDC_NET` (TinyUSB NCM + mongoose), `USB_SERIAL_BRIDGE`, `CAN_OPEN` (co_stack).
+- **M**: HAL i2c + EEPROM driver, usb (TinyUSB), serial, can; services `USB_CDC_NET` (TinyUSB NCM + mongoose), `USB_BRIDGE`, `CAN_OPEN` (co_stack).
 - The `net` service (mongoose + **modbus_tcp**, always built with net) compiles for both targets.
 
 ### Layering
 - `core/` — board glue: per-family HAL conf/MSP/system files under `core/inc|src/{f1,f7,g0}`, `syscalls.c`/`sysmem.c`, `FreeRTOSConfig.h`. See `core/README.md`.
-- `thirdparty/rhs/` — the RHS framework: `core/` (threads, records, queues/mutexes/semaphores/event flags — static FreeRTOS wrappers; log; memmgr), `hal/` (one module per peripheral, each with its own CMakeLists), `applications/services/` (cli, loader, net + backends, can_open, notification, usb_serial_bridge).
+- `thirdparty/rhs/` — the RHS framework: `core/` (threads, records, queues/mutexes/semaphores/event flags — static FreeRTOS wrappers; log; memmgr), `hal/` (one module per peripheral, each with its own CMakeLists), `applications/services/` (cli, loader, net + backends, can_open, notification, usb_bridge).
 - `user_apps/` — application services (currently: `cdc_net_hello_rhs`, `eth_net_hello_rhs`).
 - `user_tests/` — device-side tests (currently: `memmng_test`, `records_test`, `eeprom_test`, `io_test`, `flash_ex_test`); `io_test` also has a paired HIL test under `testbench/`.
 - `thirdparty/` also holds freertos, mongoose, tinyusb, co_stack (CANopen), rcan/rserial/rtimer/runit, RTT — external libraries.

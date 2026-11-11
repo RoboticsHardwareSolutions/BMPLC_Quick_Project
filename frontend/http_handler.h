@@ -4,11 +4,8 @@
 #include "rhs_version.h"
 #include "mongoose.h"
 #include <stdio.h>
-#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
-#    include "usb_serial_bridge.h"
-#endif
-#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
-#    include "usb_eth_bridge.h"
+#if defined(RHS_SERVICE_USB_BRIDGE)
+#    include "usb_bridge.h"
 #endif
 
 #if defined(RHS_BSP_IO)
@@ -156,14 +153,16 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 static char body[1024];  // Save stack
                 size_t      off = 0;
 
-#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
+#if defined(RHS_SERVICE_USB_BRIDGE)
+#    if defined(RHS_HAL_SERIAL)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs232\"}", (off > 0) ? "," : "");
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs485\"}", (off > 0) ? "," : "");
-#endif
-#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
+#    endif
+#    if defined(RHS_HAL_ETH)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"eth\"}", (off > 0) ? "," : "");
-#endif
+#    endif
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"can\"}", (off > 0) ? "," : "");
+#endif
                 if (off != 0)
                     mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{%m:[%s]}", MG_ESC("bridges"), body);
                 else
@@ -192,31 +191,33 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                     type = mg_str_n(hm->body.buf + toff + 1, (size_t) tlen - 2);
                 }
 
-#if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
-                UsbSerialBridgeConfig cfg = {
-                    .vcp_ch         = 0,
-                    .flow_pins      = 0,
-                    .baudrate_mode  = 0,
-                    .baudrate       = 9600,
-                    .software_de_re = 0,
-                };
+#if defined(RHS_SERVICE_USB_BRIDGE)
+                // One bridge at a time: a new request replaces the running bridge
+                static UsbBridge* http_bridge = NULL;
+                UsbBridgeConfig   cfg         = {.mode = UsbBridgeModeBridge, .baudrate = 9600};
+                bool              known       = true;
 
-                if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs232")))
+                if (!mg_strcmp(type, mg_str("rs232")))
+                    cfg.target = UsbBridgeTargetRs232;
+                else if (!mg_strcmp(type, mg_str("rs485")))
+                    cfg.target = UsbBridgeTargetRs485;
+                else if (!mg_strcmp(type, mg_str("eth")))
+                    cfg.target = UsbBridgeTargetEth;
+                else if (!mg_strcmp(type, mg_str("can")))
                 {
-                    cfg.serial_ch = RHSHalSerialIdRS232;
-                    (void) usb_serial_bridge_start(&cfg);
+                    cfg.target   = UsbBridgeTargetCan;
+                    cfg.baudrate = 500000;
                 }
-                else if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs485")))
-                {
-                    cfg.serial_ch = RHSHalSerialIdRS485;
-                    (void) usb_serial_bridge_start(&cfg);
-                }
-#endif
+                else
+                    known = false;
 
-#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
-                if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("eth")))
+                if (known && !mg_strcmp(port, mg_str("usb")))
                 {
-                    (void) usb_eth_bridge_start(NULL);
+                    if (http_bridge != NULL)
+                    {
+                        usb_bridge_stop(http_bridge);
+                    }
+                    http_bridge = usb_bridge_start(&cfg);
                 }
 #endif
 
