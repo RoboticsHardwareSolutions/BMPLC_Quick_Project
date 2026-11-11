@@ -7,7 +7,7 @@
 #if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
 #    include "usb_serial_bridge.h"
 #endif
-#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
 #    include "usb_eth_bridge.h"
 #endif
 
@@ -152,7 +152,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs232\"}", (off > 0) ? "," : "");
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"rs485\"}", (off > 0) ? "," : "");
 #endif
-#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"eth\"}", (off > 0) ? "," : "");
 #endif
                 off += mg_snprintf(body + off, sizeof(body) - off, "%s{\"usb\":\"can\"}", (off > 0) ? "," : "");
@@ -185,7 +185,7 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 }
 
 #if defined(RHS_SERVICE_USB_SERIAL_BRIDGE)
-                UsbSerialConfig cfg = {
+                UsbSerialBridgeConfig cfg = {
                     .vcp_ch         = 0,
                     .flow_pins      = 0,
                     .baudrate_mode  = 0,
@@ -196,16 +196,16 @@ static inline void http_fn(struct mg_connection* c, int ev, void* ev_data)
                 if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs232")))
                 {
                     cfg.serial_ch = RHSHalSerialIdRS232;
-                    (void) usb_serial_enable(&cfg);
+                    (void) usb_serial_bridge_start(&cfg);
                 }
                 else if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("rs485")))
                 {
                     cfg.serial_ch = RHSHalSerialIdRS485;
-                    (void) usb_serial_enable(&cfg);
+                    (void) usb_serial_bridge_start(&cfg);
                 }
 #endif
 
-#if defined(RHS_APPLICATION_USB_ETH_BRIDGE)
+#if defined(RHS_SERVICE_USB_ETH_BRIDGE)
                 if (!mg_strcmp(port, mg_str("usb")) && !mg_strcmp(type, mg_str("eth")))
                 {
                     (void) usb_eth_bridge_start(NULL);

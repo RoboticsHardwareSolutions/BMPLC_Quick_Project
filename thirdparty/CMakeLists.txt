@@ -66,7 +66,7 @@ target_include_directories(mlib
         ${CMAKE_CURRENT_SOURCE_DIR}/mlib
 )
 
-if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET OR RHS_APPLICATION_USB_ETH_BRIDGE)
+if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_SERVICE_USB_CDC_NET OR RHS_SERVICE_USB_ETH_BRIDGE)
         ####################### USB lib ############################
         add_library(tinyusb STATIC
                 tinyusb/src/tusb.c
@@ -97,7 +97,7 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET OR RHS_APPLICATI
                 PUBLIC
                 ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/src
         )
-        if(RHS_APPLICATION_USB_CDC_NET OR RHS_APPLICATION_USB_ETH_BRIDGE)
+        if(RHS_SERVICE_USB_CDC_NET OR RHS_SERVICE_USB_ETH_BRIDGE)
                 target_compile_definitions(tinyusb PUBLIC CFG_TUD_NCM)
                 target_include_directories(tinyusb PUBLIC
                         ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb/lib/networking
@@ -116,7 +116,7 @@ if(RHS_SERVICE_USB_SERIAL_BRIDGE OR RHS_APPLICATION_USB_CDC_NET OR RHS_APPLICATI
 endif()
 
 ####################### MOGOOSE lib ############################
-if(RHS_APPLICATION_ETH_NET OR RHS_APPLICATION_USB_CDC_NET)
+if(RHS_SERVICE_ETH_NET OR RHS_SERVICE_USB_CDC_NET)
         add_library(mongoose mongoose/mongoose.c)
         set_target_properties(mongoose
                 PROPERTIES
