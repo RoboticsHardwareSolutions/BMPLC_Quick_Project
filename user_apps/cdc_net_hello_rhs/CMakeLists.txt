@@ -13,7 +13,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
-    cdc_net
+    usb_cdc_net
 )
 
 start_up(cdc_net_hello_rhs_start_up)
