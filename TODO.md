@@ -1,3 +1,5 @@
+- Для G0 - • Turn off prefetch with PREFETCH_ENABLE 0U / Keep prefetch and set VTOR = 0x08000000
+- rhs_hal.c это ад летящий на крыльях ночи надо что то придумать с инициализацией GPIO
 - создать отдельный workflow hil
 - добавить rlibhelper и отформатировать весь код 
 - переделать стили страницы с IO 
