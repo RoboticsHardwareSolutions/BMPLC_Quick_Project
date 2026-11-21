@@ -1,5 +1,6 @@
-- Для G0 - • Turn off prefetch with PREFETCH_ENABLE 0U / Keep prefetch and set VTOR = 0x08000000
-- rhs_hal.c это ад летящий на крыльях ночи надо что то придумать с инициализацией GPIO
+- __FILE__ of rhs_assert / runit relative to the repo: shorter strings in the flash  add_compile_options(-fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
+- Возможный сбой, пока не исправлен. Если запустить мост (usb can app), он освобождает CDC-NET, а приложение продолжает хранить старый указатель. Последующий usb_cdc_app stop обратится к освобождённой памяти. Тесты сюда не попадают, но для исправления нужна небольшая доработка в rhs.
+- rhs_hal_i2c.c это ад летящий на крыльях ночи надо что то придумать с инициализацией GPIO
 - создать отдельный workflow hil
 - добавить rlibhelper и отформатировать весь код 
 - переделать стили страницы с IO 

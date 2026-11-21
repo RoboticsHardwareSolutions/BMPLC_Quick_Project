@@ -81,8 +81,20 @@ def bridge_ensure_stopped(plc) -> None:
         bridge_stop(plc)
 
 
+@pytest.fixture(scope="module")
+def no_cdc_net(plc):
+    """The USB CDC network (user_apps/cdc_net_hello_rhs, started at boot where built) holds the USB interface:
+    stopped for these tests, started again after them."""
+    out = plc.run_until("usb_cdc_app stop", "USB CDC network interface", timeout=STOP_TIMEOUT_S)
+    stopped = "interface stopped" in out
+    yield
+    if stopped:
+        out = plc.run_until("usb_cdc_app start", "interface started")
+        assert "interface started" in out, out
+
+
 @pytest.fixture
-def no_bridge(plc):
+def no_bridge(plc, no_cdc_net):
     """No USB interface before and after the test: unmounted, counters at zero."""
     bridge_ensure_stopped(plc)
     assert "reset" in plc.run_until("usb_mount reset", "reset")
