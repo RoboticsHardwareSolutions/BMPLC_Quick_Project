@@ -34,6 +34,7 @@ set(RHS_HAL_CAN ON)
 set(RHS_HAL_RANDOM ON)
 set(RHS_HAL_USB OFF)
 set(RHS_HAL_ETH ON)
+set(RHS_HAL_ADC OFF)                      # only G0B1 is supported
 
 ## BSP / DRIVERS
 set(RHS_DRIVER_EEPROM OFF)
@@ -64,3 +65,4 @@ set(RHS_TEST_EXTI ON)
 set(RHS_TEST_USB_BRIDGE ON)
 set(RHS_TEST_USB_BRIDGE_APP ON)
 set(RHS_TEST_USB_MOUNT ON)
+set(RHS_TEST_ADC OFF)

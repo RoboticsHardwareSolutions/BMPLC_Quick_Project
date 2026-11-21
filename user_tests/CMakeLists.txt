@@ -29,3 +29,7 @@ endif()
 if(RHS_TEST_USB_MOUNT)
     add_subdirectory(usb_mount_test)
 endif()
+
+if(RHS_TEST_ADC)
+    add_subdirectory(adc_test)
+endif()
