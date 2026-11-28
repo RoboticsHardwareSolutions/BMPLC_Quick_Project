@@ -8,12 +8,15 @@
 #include <string.h>
 
 #include "testbench_proto.h"
+#include "usb_resolve.h"
 
 /* TbIfaceStatusResp.path is a hand-sized literal (testbench_proto.h) that must match
  * TB_IFACE_PATH_LEN (config.h) exactly -- the memcpy below copies between the two
  * byte-for-byte. Caught at compile time rather than relying on the comment alone. */
 _Static_assert(sizeof(((TbIfaceStatusResp*) 0)->path) == TB_IFACE_PATH_LEN,
                 "TbIfaceStatusResp.path size must match TB_IFACE_PATH_LEN");
+_Static_assert(sizeof(((TbResolveUsbLocationResp*) 0)->path) == TB_IFACE_PATH_LEN,
+                "TbResolveUsbLocationResp.path size must match TB_IFACE_PATH_LEN");
 
 struct TbIpc
 {
@@ -157,6 +160,29 @@ static size_t handle_request(TbIpc* ipc, const uint8_t* req, size_t req_len, uin
                 body.present = ipc->st->iface_present[idx] ? 1 : 0;
                 memcpy(body.path, ipc->st->iface_path[idx], sizeof(body.path));
                 pthread_mutex_unlock(&ipc->st->mutex);
+            }
+
+            rh.status = TB_STATUS_OK;
+            memcpy(resp, &rh, sizeof(rh));
+            memcpy(resp + off, &body, sizeof(body));
+            return off + sizeof(body);
+        }
+        case TB_OP_RESOLVE_USB_LOCATION:
+        {
+            if (payload_len < sizeof(TbResolveUsbLocationReq))
+                break;
+            TbResolveUsbLocationReq in;
+            memcpy(&in, payload, sizeof(in));
+
+            /* Not currently enumerated (not plugged in, bridge not started yet, wrong
+             * location) is valid data ("not present"), not an error -- same contract
+             * as TB_OP_GET_IFACE_STATUS. */
+            TbResolveUsbLocationResp body = {0};
+            char                     path[TB_IFACE_PATH_LEN];
+            if (tb_usb_resolve(in.usb_location, path, sizeof(path)) == 0)
+            {
+                body.present = 1;
+                memcpy(body.path, path, sizeof(body.path));
             }
 
             rh.status = TB_STATUS_OK;

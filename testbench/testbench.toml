@@ -1,11 +1,13 @@
 [targets.plc_m]
     mcu = "STM32F103RE"
     jlink_serial = "000772440172"
+    usb_location = 0x03112000
 
 
 [targets.plc_xl]
     mcu = "STM32F765ZG"
     jlink_serial = "772440171"
+    usb_location = 0x03123000
 
 
 [io.connection]
@@ -69,7 +71,7 @@
 
 
 [iface.canbus]
-    usb_location = 0x110000
+    usb_location = 0x2110000
 
 [iface.rs422]
     usb_location = 0x120000

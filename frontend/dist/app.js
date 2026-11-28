@@ -124,11 +124,13 @@
         infoHeader.textContent = data.bmplcType || 'BMPLC';
         serialHeader.textContent = data.serial || 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
         versionHeader.textContent = data.version || 'v0.0.0';
+        set_io_available(data.io !== false);
       })
       .catch(function () {
         infoHeader.textContent = 'BMPLC';
         serialHeader.textContent = 'xxxx-xxxx-xxxxxxxx-xxxxxxxx';
         versionHeader.textContent = 'v0.0.0';
+        set_io_available(true);
       })
   }
 
@@ -276,8 +278,20 @@
     })(ioButtons[b]);
   }
 
-  load_io();
-  setInterval(function () { load_io(); }, 250);
+  // Boards without discrete I/O (e.g. G0B1) report io: false in /api/info: hide the panel and do not poll
+  var ioCard = document.querySelector('.io-card');
+  var ioTimer = null;
+
+  function set_io_available(available) {
+    ioCard.hidden = !available;
+    if (available && ioTimer === null) {
+      load_io();
+      ioTimer = setInterval(function () { load_io(); }, 250);
+    } else if (!available && ioTimer !== null) {
+      clearInterval(ioTimer);
+      ioTimer = null;
+    }
+  }
   apply(localStorage.getItem('bmplc-lang') || 'ru');
 
   var API_URL_BRIDGES = '/api/bridges';

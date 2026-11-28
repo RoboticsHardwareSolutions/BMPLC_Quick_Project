@@ -35,6 +35,14 @@ trivial, so there's no separate "bare" Python example -- see
 `testbench/io_hub/client/python/testbench_client.py` if you want to skip `TestbenchLabels`
 and send raw bit positions yourself, exactly like the C example does.)
 
+A fourth Python-only example, **`python/04_canbus_probe.py`**, is a standalone SLCAN
+diagnostic CLI for the `[iface.canbus]` adapter itself -- talks to it directly (status,
+send, listen, or a raw interactive REPL), without the PLC/J-Link/pytest fixture chain.
+Useful when debugging "no CAN traffic arrives" problems: it tells you whether the
+adapter is answering SLCAN commands at all (a wiring/power/adapter-health question)
+before you even get to whether CAN frames cross the physical bus (a wiring/termination
+question). See its own `--help` and module docstring for usage.
+
 ## Prerequisite: a running daemon
 
 All examples talk to an **already-running** `testbench` daemon over its IPC socket

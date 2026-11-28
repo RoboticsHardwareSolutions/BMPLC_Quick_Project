@@ -40,7 +40,7 @@ def list_unit_test_commands(rtt: PlcRtt, timeout: float = 5.0) -> list[str]:
     "_test" -- same substring filter as CI's `grep "_test"`, applied to the
     whitespace-split (`%-30s`-padded, 3-column) `cli_commands()` output.
 
-    `cli_commands()` (thirdparty/rhs/applications/services/cli/cli_app.c)
+    `cli_commands()` (thirdparty/rhs/applications/services/cli/cli.c)
     always ends its output with a trailing "\\r\\n" (after the last full row
     of 3, or after the remainder) and prints nothing afterwards (no prompt
     echo) -- so a response that doesn't end in "\\r\\n" is distinguishable

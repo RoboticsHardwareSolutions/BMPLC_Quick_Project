@@ -271,6 +271,34 @@ void eeprom_multi_page_write_test(void)
         runit_eq(read_data[i], write_data[i]);
 }
 
+#define EEPROM_TIMING_ITERATIONS (8U)
+#define EEPROM_TIMING_READ_SIZE  (512U)
+
+/* Not a check: prints the duration of typical operations to compare bus settings */
+void eeprom_timing_test(void)
+{
+    static uint8_t buf[EEPROM_TIMING_READ_SIZE];
+    for (size_t i = 0; i < sizeof(buf); ++i)
+        buf[i] = (uint8_t) i;
+
+    uint32_t start = rhs_get_tick();
+    for (uint32_t i = 0; i < EEPROM_TIMING_ITERATIONS; ++i)
+        runit_assert(eeprom_write(&at24c256, 0, buf, at24c256.page_size) == EepromStatusOk);
+    uint32_t page_write = rhs_get_tick() - start;
+
+    start = rhs_get_tick();
+    for (uint32_t i = 0; i < EEPROM_TIMING_ITERATIONS; ++i)
+        runit_assert(eeprom_read(&at24c256, 0, buf, sizeof(buf)) == EepromStatusOk);
+    uint32_t read = rhs_get_tick() - start;
+
+    /* Ticks are 1 ms, the average is printed in 0.1 ms */
+    printf("TIMING page_write_%u=%lu read_%u=%lu (x0.1 ms)\r\n",
+           (unsigned) at24c256.page_size,
+           (unsigned long) (page_write * 10U / EEPROM_TIMING_ITERATIONS),
+           (unsigned) sizeof(buf),
+           (unsigned long) (read * 10U / EEPROM_TIMING_ITERATIONS));
+}
+
 void eeprom_test(char* args, void* context)
 {
     runit_counter_assert_passes   = 0;
@@ -300,6 +328,7 @@ void eeprom_test(char* args, void* context)
     eeprom_size_limit_test();
     eeprom_multi_page_write_test();
     eeprom_random_access_test();
+    eeprom_timing_test();
     // eeprom_full_test(); // Uncomment for full EEPROM test (takes longer)
 
     rhs_hal_i2c_release(at24c256.i2c_handle);

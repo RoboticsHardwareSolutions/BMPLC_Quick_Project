@@ -72,6 +72,19 @@ class PlcRtt:
 
         return "".join(chunks)
 
+    def run_until(self, msg: str, expect: str, timeout: float = 5.0) -> str:
+        """Like run(), but keeps reading until `expect` shows up in the text or `timeout` elapses: for commands
+        whose answer comes later than RTT_QUIET_PERIOD_S (e.g. after stopping a thread). Never raises."""
+        deadline = time.monotonic() + timeout
+        text = self.run(msg, timeout=timeout)
+        while expect not in text and time.monotonic() < deadline:
+            data = self._programmer.rtt_read(max_bytes=4096)
+            if data:
+                text += data.decode("utf-8", errors="replace")
+            else:
+                time.sleep(RTT_POLL_S)
+        return text
+
     def read_inputs(self, timeout: float = 5.0) -> dict:
         """Returns {0: bool, 1: bool, ...} for IN0..IN4, parsed from `io`'s output.
 

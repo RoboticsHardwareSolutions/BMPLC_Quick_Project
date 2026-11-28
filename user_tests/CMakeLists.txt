@@ -21,3 +21,19 @@ endif()
 if(RHS_TEST_EXTI)
     add_subdirectory(exti_test)
 endif()
+
+if(RHS_TEST_USB_BRIDGE OR RHS_TEST_USB_BRIDGE_APP)
+    add_subdirectory(usb_bridge_test)
+endif()
+
+if(RHS_TEST_USB_MOUNT)
+    add_subdirectory(usb_mount_test)
+endif()
+
+if(RHS_TEST_ADC)
+    add_subdirectory(adc_test)
+endif()
+
+if(RHS_TEST_CAN)
+    add_subdirectory(can_hal_test)
+endif()

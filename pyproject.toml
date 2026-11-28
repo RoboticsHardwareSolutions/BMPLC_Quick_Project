@@ -7,6 +7,8 @@ dependencies = [
     "pytest>=8.0",
     "bmlab-toolkit",
     "pynng>=0.8",
+    "python-can>=4.4",
+    "pyserial>=3.5",
 ]
 
 [tool.pytest.ini_options]

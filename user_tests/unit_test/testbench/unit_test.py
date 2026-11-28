@@ -23,19 +23,21 @@ silent, meaningless "0 ran, 0 failed" pass.
 Run against hardware with, e.g.:
     PLC_TYPE=BMPLC_M PLC_BIN=cmake-build-debug/bmplc.bin \
       uv run pytest user_tests/unit_test/testbench/ -v
+    JLINK_SERIAL=772440188 MCU=STM32G0B1KC uv run pytest user_tests/unit_test/testbench/ -v   # board on the desk
 """
 
 from __future__ import annotations
 
-import os
 
 import pytest
 
+from conftest import hil_available
 from testbench.pyhil.unit_tests import list_unit_test_commands, run_unit_test
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("PLC_TYPE"),
-    reason="on-target unit tests require hardware: set PLC_TYPE=BMPLC_M|BMPLC_XL (see conftest.py)",
+    not hil_available(),
+    reason="on-target unit tests require hardware: set PLC_TYPE=BMPLC_M|BMPLC_XL or JLINK_SERIAL and MCU "
+    "(see conftest.py)",
 )
 
 
