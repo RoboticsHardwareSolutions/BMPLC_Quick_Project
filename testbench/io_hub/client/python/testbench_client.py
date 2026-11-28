@@ -27,6 +27,7 @@ _OP_GET_OUTPUTS = 2
 _OP_SET_COILS_MASK = 3
 _OP_GET_STATUS = 4
 _OP_GET_IFACE_STATUS = 5
+_OP_RESOLVE_USB_LOCATION = 6
 
 _STATUS_OK = 0
 
@@ -47,6 +48,8 @@ _OUTPUTS_RESP = struct.Struct("=Iii")
 _STATUS_RESP = struct.Struct("=QQQ")
 _IFACE_STATUS_REQ = struct.Struct("=B")
 _IFACE_STATUS_RESP = struct.Struct("=B64s")
+_RESOLVE_LOCATION_REQ = struct.Struct("=I")
+_RESOLVE_LOCATION_RESP = struct.Struct("=B64s")
 
 _RECV_TIMEOUT_MS = 1000
 _SEND_TIMEOUT_MS = 1000
@@ -151,6 +154,22 @@ class TestbenchClient:
             return True, path.split(b"\0", 1)[0].decode("ascii")
         except TestbenchIpcError:
             return False, ""
+
+    def resolve_usb_location(self, usb_location: int) -> str | None:
+        """Resolve an arbitrary USB port location (IOKit locationID, e.g. a PLC target's
+        own `[targets.<key>].usb_location` in testbench.toml) to its currently-enumerated
+        /dev path, or None if nothing is plugged in there right now -- never raises,
+        same "always succeeds" style as iface_available(), but for a location that isn't
+        necessarily one of the four well-known [iface.*] kinds."""
+        try:
+            present, path = _RESOLVE_LOCATION_RESP.unpack(
+                self._call(_OP_RESOLVE_USB_LOCATION, _RESOLVE_LOCATION_REQ.pack(usb_location))
+            )
+            if not present:
+                return None
+            return path.split(b"\0", 1)[0].decode("ascii")
+        except TestbenchIpcError:
+            return None
 
 
 @dataclass(frozen=True)

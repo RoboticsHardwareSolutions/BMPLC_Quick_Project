@@ -57,3 +57,10 @@ bool tb_client_get_status(TbClient* c, uint64_t* uptime_ms, uint64_t* poll_count
  * On false, out_path is set to an empty string. out_path_len is ignored if out_path
  * is NULL. */
 bool tb_client_iface_available(TbClient* c, TbIfaceId iface, char* out_path, size_t out_path_len);
+
+/* Resolves an arbitrary USB port location (IOKit locationID -- e.g. a PLC target's own
+ * usb_location from testbench.toml's [targets.<key>], not necessarily one of the four
+ * well-known TB_IFACE_* kinds) to its currently-enumerated /dev path. Same "always
+ * succeeds, false uniformly covers every reason" contract as tb_client_iface_available()
+ * above, and the same out_path truncation/NUL-termination behavior. */
+bool tb_client_resolve_usb_location(TbClient* c, uint32_t usb_location, char* out_path, size_t out_path_len);

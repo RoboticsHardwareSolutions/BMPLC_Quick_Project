@@ -33,10 +33,10 @@ pytestmark = hw.requires_hw
 
 
 @pytest.fixture(scope="module", autouse=True)
-def echo_can(plc) -> Iterator[None]:
-    hw.echo_start(plc, "can")
+def echo_can(plc, io_config, request: pytest.FixtureRequest) -> Iterator[None]:
+    hw.echo_start(plc, "can", io_config, request)
     yield
-    hw.echo_stop(plc)
+    hw.echo_stop(plc, io_config, request)
 
 
 # ------------------------------------------------------------------ raw SLCAN

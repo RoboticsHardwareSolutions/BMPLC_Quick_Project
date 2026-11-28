@@ -13,6 +13,10 @@
  * daemon-routed call can give. There's deliberately no "list all interfaces" call:
  * callers already know which of the four kinds they care about.
  *
+ * TB_OP_RESOLVE_USB_LOCATION is the generic counterpart: it resolves any
+ * caller-supplied usb_location (e.g. a PLC target's own CDC port, not one of the four
+ * [iface.*] kinds) the same way tb_usb_resolve() already does internally.
+ *
  * All multi-byte fields are native-endian -- this is a localhost-only, same-machine
  * IPC transport (ipc:// = a Unix domain socket under the hood), not a network protocol.
  */
@@ -32,6 +36,7 @@ enum
     TB_OP_SET_COILS_MASK   = 3,
     TB_OP_GET_STATUS       = 4,
     TB_OP_GET_IFACE_STATUS = 5,
+    TB_OP_RESOLVE_USB_LOCATION = 6,
 };
 
 enum
@@ -138,5 +143,24 @@ typedef struct
     uint8_t present;
     char    path[64];
 } TbIfaceStatusResp;
+
+/* TB_OP_RESOLVE_USB_LOCATION request payload. Unlike TB_OP_GET_IFACE_STATUS (one of the
+ * four well-known [iface.*] kinds), this resolves an arbitrary caller-supplied
+ * usb_location -- e.g. a PLC target's own CDC port (testbench.toml's
+ * [targets.<key>].usb_location), which isn't one of the TB_IFACE_* kinds and has no
+ * fixed count the way the four interfaces do. */
+typedef struct
+{
+    uint32_t usb_location;
+} TbResolveUsbLocationReq;
+
+/* TB_OP_RESOLVE_USB_LOCATION response payload -- same shape/semantics as
+ * TbIfaceStatusResp: present=0 and an empty path whenever nothing is currently
+ * enumerated at that location (never an error by itself). */
+typedef struct
+{
+    uint8_t present;
+    char    path[64];
+} TbResolveUsbLocationResp;
 
 #pragma pack(pop)

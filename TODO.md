@@ -1,5 +1,6 @@
+- проверить результат тестов многократных в корне проекта 
 - __FILE__ of rhs_assert / runit relative to the repo: shorter strings in the flash  add_compile_options(-fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
-- Возможный сбой, пока не исправлен. Если запустить мост (usb can app), он освобождает CDC-NET, а приложение продолжает хранить старый указатель. Последующий usb_cdc_app stop обратится к освобождённой памяти. Тесты сюда не попадают, но для исправления нужна небольшая доработка в rhs.
+
 - rhs_hal_i2c.c это ад летящий на крыльях ночи надо что то придумать с инициализацией GPIO
 - создать отдельный workflow hil
 - добавить rlibhelper и отформатировать весь код 
@@ -9,20 +10,24 @@
 - Удалить old_gpio ото всюду после завершения покрытия тестами 
 - set(RHS_TEST_EEPROM OFF) - для XL выключен и не проверен ! 
 - удалить deprecated option из rhs.cmake 
-- usb_bridge: режим App для can и rs232/rs485, CLI `usb` и сообщения о неподдерживаемых режимах проверены на всех платах
-  (user_tests/usb_bridge_test/testbench): G0B1 на столе 67/67, HIL XL 63 + 1 skip, HIL M 66/66; slcan_test 145/0.
-  Режим Bridge на реальных устройствах проверим позже на стенде:
-  - can Bridge на XL (bxCAN1 PD0/PD1, PG10=high) и G0B1 (FDCAN1 PB8/PB9) с адаптером стенда [iface.canbus] (DN0536AY)
+
+  Режим Bridge на остальных интерфейсах/платах на реальных устройствах проверим позже на стенде:
+  - can Bridge на G0B1 (FDCAN1 PB8/PB9) с адаптером стенда [iface.canbus]
   - драйвер rhs_hal_can_fdcan.c для G0B1: прием/передача, IRQ TIM16_FDCAN_IT0, SCE (bus-off, error passive), битрейты от PCLK1
-  - rs232/rs485 Bridge на XL и M с адаптерами [iface.rs232] / [iface.rs485], смена baud из line coding хоста
-  - eth во всех режимах на XL после переноса из net/usb_eth_bridge; тест eth App не написан (нужны raw L2-кадры на хосте)
-  - режим BridgeApp для всех целей
-  - HIL-тесты Bridge с адаптерами стенда не написаны
-  - на XL при PG10=low старт должен давать ошибку "USB is not available"
-  - frontend /api/bridges на usb_bridge
-  - совместимость с Linux slcand / SocketCAN
-- HIL-стенд (gasystems@192.168.221.6): нет интернета — python-can/pyserial ставились колёсами офлайн в копию .venv
-  (~/projects/BMPLC_usb_bridge_hil); в рабочей копии стенда ~/projects/BMPLC_Quick_Project их нет
-- HIL-стенд: демон io_hub, запущенный фикстурой, на первый set_coils отвечает ошибкой (status 1); с заранее
-  запущенным демоном (testbench -d) всё работает — разобраться
-- удалить режим both из bridge 
+  - rs232/rs485 Bridge на XL и M с адаптерами [iface.rs232] / [iface.rs485], смена baud из line coding хоста —
+
+
+запусти полный набор тестов 5 раз с сохраниением результата в файл в корне проекта 
+
+
+
+
+
+
+- 
+
+
+  
+
+
+

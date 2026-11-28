@@ -25,11 +25,13 @@ git clone --recursive https://github.com/RoboticsHardwareSolutions/BMPLC_Quick_P
 - In root cmake file, set the `BMPLC_M` (by default) or `BMPLC_XL` variable to the desired hardware
 - Build cmake project
 - Plug in the BMPLC to your computer by USB
-- Start debugging ![alt text](/documentation/images/debug_vscode.png)
-    - *Launch jlink* - Use this option to start a debugging session with J-Link when the target device is connected directly to your computer.
-    - *Attach jlink* - Use this option to attach the debugger to an already running target device using J-Link. 
-    - *Launch Remote jlink* - Use this option to start a remote debugging session with J-Link. This is useful when the target device is connected to a remote machine or when you want to debug over the network.
-    - *Attach Remote jlink* - Use this option to attach the debugger to an already running target device using J-Link over the network.
+- Start debugging
+    - *Launch (SEGGER JLink)* - Use this option to start a debugging session with J-Link when the target device is connected directly to your computer.
+    - *Attach (SEGGER JLink)* - Use this option to attach the debugger to an already running target device using J-Link.
+    - *Launch (Remote SEGGER JLink)* - Use this option to start a remote debugging session with J-Link. This is useful when the target device is connected to a remote machine or when you want to debug over the network.
+    - *Attach (Remote SEGGER JLink)* - Use this option to attach the debugger to an already running target device using J-Link over the network.
+    - *Launch (Remote SEGGER JLink with setup on host)* - Same as above, but also starts the `JLinkRemoteServer` on the remote host for you.
+    - *Launch FW with RTT (BlackMagic Probe)* / *Attach FW with RTT (BlackMagic Probe)* - Same as the SEGGER JLink options above, but for a Black Magic Probe debugger.
 
 **Remote debugging**
 If you need to debug a target device that is not directly connected to your computer, you can use the remote debugging options. Make sure the target device is properly configured for remote debugging and accessible over the network:
@@ -37,7 +39,7 @@ On remote system, run the J-Link GDB Server with the appropriate parameters to a
 ```sh
 ./JLinkRemoteServer -nogui -select usb=772440172 -USB -device STM32F103RE -endian little -speed 4000 -if swd -rtos GDBServer/RTOSPlugin_FreeRTOS.so
 ```
-Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F767ZG` for BMPLC_XL.
+Use the `-device STM32F103RE` for BMPLC_M or `-device STM32F765ZG` for BMPLC_XL.
 
 Then, in VSCode, select the "Launch Remote jlink" or "Attach Remote jlink" option and provide the necessary connection details (IP address and port number) to connect to the remote J-Link GDB Server.
 
@@ -60,6 +62,9 @@ You can use the RTT CLI without vscode by using the `JLinkRTTClient` tool. This 
 - `reset` - resets the system
 - `uid` - shows the unique identifier of the system
 - `top` - shows the top tasks running in the system
+- `crash` - deliberately crashes the system (for testing the fault/assert path)
+- `hardfault` - deliberately triggers a HardFault (for testing the fault handler)
+- `info` - shows build/version info
 - `can_open`:
   - `-f <id>`: Add a CAN ID to the filter list
   - `-e <id>`: Remove a CAN ID from the filter list
@@ -67,13 +72,10 @@ You can use the RTT CLI without vscode by using the `JLinkRTTClient` tool. This 
   - `-l`: List all CAN IDs in the filter list
   - `-s <id>`: Send a CAN package with the specified ID
   - `-m`: Show this manual
-- `usb_bridge`:
-  - `-rs232`: Add/Remove a USB RS232 bridge
-  - `-rs485`: Add/Remove a USB RS485 bridge
+- `usb <can|rs232|rs485|eth|ethernet> [bridge|app|both] [baud]` - start a USB bridge for the given interface (default mode: `bridge`)
+  - `usb stop` - stop the running bridge
+  - `usb state` - show the running bridge's state/counters
 - `mem_test` - performs a memory test
-- `log_save_test` - performs a log save test
-
-Example of using the `?` command: ![alt text](/documentation/images/log_help.png)
 
 
 ### Creating a new application

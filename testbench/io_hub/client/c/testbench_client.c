@@ -153,3 +153,23 @@ bool tb_client_iface_available(TbClient* c, TbIfaceId iface, char* out_path, siz
     }
     return available;
 }
+
+bool tb_client_resolve_usb_location(TbClient* c, uint32_t usb_location, char* out_path, size_t out_path_len)
+{
+    if (out_path && out_path_len)
+        out_path[0] = '\0';
+
+    TbResolveUsbLocationReq  req = {usb_location};
+    TbResolveUsbLocationResp body;
+    if (!do_call(c, TB_OP_RESOLVE_USB_LOCATION, &req, sizeof(req), &body, sizeof(body)))
+        return false; /* daemon unreachable */
+
+    bool present = body.present != 0;
+    if (present && out_path && out_path_len)
+    {
+        size_t n = sizeof(body.path) < out_path_len ? sizeof(body.path) : out_path_len - 1;
+        memcpy(out_path, body.path, n);
+        out_path[n] = '\0';
+    }
+    return present;
+}

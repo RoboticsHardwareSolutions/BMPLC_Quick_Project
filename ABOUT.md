@@ -33,7 +33,7 @@ cmake --build .
 - Compiler flags/includes for analysis or IDE setup: `build/compile_commands.json` (or `cmake-build-debug/`).
 
 ### RTT CLI commands
-`?`, `uptime`, `free`, `log`, `reset`, `uid`, `top`, `can_open` (filter/send CAN frames), `usb_bridge` (`-rs232`/`-rs485`), `mem_test`, `log_save_test`, plus all registered device tests.
+`?`, `uptime`, `free`, `log`, `reset`, `uid`, `top`, `crash`, `hardfault`, `info`, `can_open` (filter/send CAN frames), `usb` (`usb can|rs232|rs485|eth|ethernet [bridge|app|both] [baud]`, `usb stop`, `usb state`), `mem_test`, plus all registered device tests.
 
 ## Architecture
 

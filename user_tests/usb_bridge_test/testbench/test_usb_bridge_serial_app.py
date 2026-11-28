@@ -25,10 +25,10 @@ RX_TIMEOUT_S = 2.0
 
 
 @pytest.fixture(scope="module", autouse=True)
-def echo_rs232(plc) -> Iterator[None]:
-    hw.echo_start(plc, "rs232")
+def echo_rs232(plc, io_config, request: pytest.FixtureRequest) -> Iterator[None]:
+    hw.echo_start(plc, "rs232", io_config, request)
     yield
-    hw.echo_stop(plc)
+    hw.echo_stop(plc, io_config, request)
 
 
 @pytest.fixture
@@ -139,16 +139,16 @@ def test_second_bridge_refused(plc, port) -> None:
 # ------------------------------------------------------------------ 6. stop and switch target
 
 
-def test_stop_and_switch_target(plc) -> None:
-    hw.echo_stop(plc)  # port disappears
-    hw.echo_start(plc, "can")
+def test_stop_and_switch_target(plc, io_config, request: pytest.FixtureRequest) -> None:
+    hw.echo_stop(plc, io_config, request)  # port disappears
+    hw.echo_start(plc, "can", io_config, request)
     with serial.Serial(hw.PORT, 115200, timeout=0.5) as ser:
         ser.write(b"V\r")
         assert ser.read(6) == b"V1010\r", "CAN target does not answer SLCAN"
-    hw.echo_stop(plc)
-    hw.echo_start(plc, "rs485")
+    hw.echo_stop(plc, io_config, request)
+    hw.echo_start(plc, "rs485", io_config, request)
     with serial.Serial(hw.PORT, 9600, timeout=0.05) as ser:
         ser.write(b"rs485")
         assert read_exactly(ser, 5, RX_TIMEOUT_S) == b"rs485"
-    hw.echo_stop(plc)
-    hw.echo_start(plc, "rs232")  # back for the module fixture teardown
+    hw.echo_stop(plc, io_config, request)
+    hw.echo_start(plc, "rs232", io_config, request)  # back for the module fixture teardown

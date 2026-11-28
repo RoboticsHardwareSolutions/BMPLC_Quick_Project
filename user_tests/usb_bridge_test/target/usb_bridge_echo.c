@@ -1,6 +1,9 @@
 /* App mode test application for usb_bridge, driven over RTT by the host tests in ../testbench/.
  *
  *   usb_bridge_echo can|rs232|rs485   start the bridge in App mode with the echo callback (restarts if running)
+ *   usb_bridge_echo can both          CAN only: start in Both/BridgeApp mode instead -- the echo callback stays
+ *                                     registered while the physical bus is also bridged to USB (see usb_bridge.h's
+ *                                     UsbBridgeModeBridgeApp); rs232/rs485 stay App-only here
  *   usb_bridge_echo stop              stop it
  *   usb_bridge_echo burst <n>         RS232/RS485: send n counter bytes (i & 0xFF) from the CLI thread (queue path)
  *   usb_bridge_echo state             print the bridge state
@@ -138,18 +141,18 @@ static void echo_stop(void)
     }
 }
 
-static void echo_start(UsbBridgeTarget target)
+static void echo_start(UsbBridgeTarget target, UsbBridgeMode mode)
 {
     echo_stop();
     UsbBridgeConfig cfg = {
         .target   = target,
-        .mode     = UsbBridgeModeApp,
+        .mode     = mode,
         .baudrate = target == UsbBridgeTargetCan ? 500000 : 9600,
     };
     const char* reason = usb_bridge_check(&cfg);
     if (reason != NULL)
     {
-        printf("error: %s app: %s\r\n", usb_bridge_target_name(target), reason);
+        printf("error: %s %s: %s\r\n", usb_bridge_target_name(target), usb_bridge_mode_name(mode), reason);
         return;
     }
     echo.bridge = usb_bridge_start(&cfg);
@@ -166,7 +169,7 @@ static void echo_start(UsbBridgeTarget target)
     {
         usb_bridge_set_data_callback(echo.bridge, echo_on_data, NULL);
     }
-    printf("started %s\r\n", usb_bridge_target_name(target));
+    printf("started %s %s\r\n", usb_bridge_target_name(target), usb_bridge_mode_name(mode));
 }
 
 static void echo_state(void)
@@ -193,19 +196,23 @@ static void echo_cli(char* args, void* context)
     UNUSED(context);
     if (args == NULL)
     {
-        printf("usb_bridge_echo can|rs232|rs485|stop|state|burst <n>\r\n");
+        printf("usb_bridge_echo can|rs232|rs485|can both|stop|state|burst <n>\r\n");
     }
     else if (strcmp(args, "can") == 0)
     {
-        echo_start(UsbBridgeTargetCan);
+        echo_start(UsbBridgeTargetCan, UsbBridgeModeApp);
+    }
+    else if (strcmp(args, "can both") == 0)
+    {
+        echo_start(UsbBridgeTargetCan, UsbBridgeModeBridgeApp);
     }
     else if (strcmp(args, "rs232") == 0)
     {
-        echo_start(UsbBridgeTargetRs232);
+        echo_start(UsbBridgeTargetRs232, UsbBridgeModeApp);
     }
     else if (strcmp(args, "rs485") == 0)
     {
-        echo_start(UsbBridgeTargetRs485);
+        echo_start(UsbBridgeTargetRs485, UsbBridgeModeApp);
     }
     else if (strcmp(args, "stop") == 0)
     {

@@ -14,7 +14,18 @@ extern uint32_t SystemCoreClock;
 #elif defined(BMPLC_M)
 #    include "stm32f1xx.h"
 #    ifndef configTOTAL_HEAP_SIZE
-#        define configTOTAL_HEAP_SIZE ((size_t) 40 * 1024)
+/* +2304B reclaimed from shrinking the USB NCM NTB buffers (tusb_config.h); real
+ * hardware testing showed this heap hitting 0 free bytes from ordinary CLI use
+ * (can_open -f filter-list growth), so the reclaimed RAM goes back to the heap
+ * pool rather than sitting idle as extra stack margin.
+ * +2048B on top of that: free_heap measured only 3440B at boot (minimum_free_heap
+ * 2920B) before even starting anything -- `usb can app`'s UsbBridge thread stack
+ * alone (USB_BRIDGE_STACK_SIZE, usb_bridge.c) is a 2048B malloc(), so the CAN
+ * rx_queue allocation right after it (usb_bridge_can.c's can_backend_start())
+ * had nothing left and hit FreeRTOS's `configASSERT(pxNewQueue)` in queue.c --
+ * a hard crash, not a graceful failure. Linker RAM margin before this bump was
+ * 3800B (65536 - 61736 used), so +2048B here still leaves ~1750B of margin. */
+#        define configTOTAL_HEAP_SIZE ((size_t) 40 * 1024 + 2304 + 2048)
 #    endif
 #elif defined(STM32F405xx) || defined(STM32F407xx)
 #    include "stm32f4xx.h"
