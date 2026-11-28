@@ -33,3 +33,7 @@ endif()
 if(RHS_TEST_ADC)
     add_subdirectory(adc_test)
 endif()
+
+if(RHS_TEST_CAN)
+    add_subdirectory(can_hal_test)
+endif()
